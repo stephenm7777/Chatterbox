@@ -1,4 +1,4 @@
-import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, Image, ScrollView } from 'react-native'
+import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, Image, ScrollView, ActivityIndicator } from 'react-native'
 import React, { useState } from 'react'
 import { useNavigation } from '@react-navigation/native';
 
@@ -10,8 +10,8 @@ const LoginScreen = () => {
         <View style={{ flex: 1, backgroundColor: "#010C80", padding: 10, alignItems: "center" }}>
             <ScrollView
                 contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
-                showsVerticalScrollIndicator={false}  
-                showsHorizontalScrollIndicator={false} 
+                showsVerticalScrollIndicator={false}
+                showsHorizontalScrollIndicator={false}
             >
                 <KeyboardAvoidingView style={{ alignItems: "center" }}>
                     <Image

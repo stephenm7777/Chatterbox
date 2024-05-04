@@ -8,7 +8,6 @@ const RegisterScreen = () => {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [name, setName] = useState("");
-    const [image, setImage] = useState("");
 
     const navigation = useNavigation();
 
@@ -22,7 +21,7 @@ const RegisterScreen = () => {
                 image: image
             }
             // send POST to backend 
-            axios.post("http://localhost:8000/register", user).then((response) => {
+            axios.post("http://192.168.1.215:8000/register", user).then((response) => {
                 console.log(response);
                 Alert.alert(
                     "Registration successful",
@@ -125,22 +124,6 @@ const RegisterScreen = () => {
                                 }}
                                 placeholderTextColor={"#F8FAFC"}
                                 placeholder='Confirm password' />
-                        </View>
-                    </View>
-
-                    <View style={{ marginTop: 10 }}>
-                        <View>
-                            <Text style={{ color: "gray", fontSize: 18, fontWeight: "600" }}>Profile Picture</Text>
-                            <TextInput
-                                value={image}
-                                onChangeText={(text) => setImage(text)}
-                                style={{
-                                    fontSize: confirmPassword ? 18 : 18,
-                                    color: "#FFFFFF",
-                                    borderBottomColor: "#F8FAFC", borderBottomWidth: 1, marginVertical: 10, width: 300
-                                }}
-                                placeholderTextColor={"#F8FAFC"}
-                                placeholder='Upload Image' />
                         </View>
                     </View>
 
