@@ -1,21 +1,47 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, Image, ScrollView } from 'react-native';
+import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, Image, ScrollView, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
 
 const RegisterScreen = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [name, setName] = useState("");
-    const [img, setImage] = useState("");
+    const [image, setImage] = useState("");
 
     const navigation = useNavigation();
 
     const handleRegister = () => {
         if (password === confirmPassword) {
             console.log("Passwords match:", password);
+            const user = {
+                name: name,
+                email: email,
+                password: password,
+                image: image
+            }
+            // send POST to backend 
+            axios.post("http://localhost:8000/register", user).then((response) => {
+                console.log(response);
+                Alert.alert(
+                    "Registration successful",
+                    "You have been registered"
+                );
+                setName("");
+                setEmail("");
+                setPassword("")
+                setImage("");
+            }).catch((error) => {
+                Alert.alert(
+                    "Registration Error"
+                )
+                console.log("Registration failed", error)
+            })
         } else {
-            alert("Passwords do not match. Please try again.");
+            Alert.alert("Passwords do not match. Please try again.");
+            setPassword(""); 
+            setConfirmPassword("");
         }
     };
 
@@ -23,8 +49,8 @@ const RegisterScreen = () => {
         <View style={{ flex: 1, backgroundColor: "#010C80", padding: 10, alignItems: "center" }}>
             <ScrollView
                 contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
-                showsVerticalScrollIndicator={false}  
-                showsHorizontalScrollIndicator={false} 
+                showsVerticalScrollIndicator={false}
+                showsHorizontalScrollIndicator={false}
             >
                 <KeyboardAvoidingView style={{ alignItems: "center" }}>
                     <Image
@@ -105,7 +131,7 @@ const RegisterScreen = () => {
                         <View>
                             <Text style={{ color: "gray", fontSize: 18, fontWeight: "600" }}>Profile Picture</Text>
                             <TextInput
-                                value={confirmPassword}
+                                value={image}
                                 onChangeText={(text) => setImage(text)}
                                 style={{
                                     fontSize: confirmPassword ? 18 : 18,
