@@ -36,19 +36,17 @@ const Message = require("./models/message");
 
 //endpoint for registration of the user 
 
-app.post("/register", (req, red) => {
-    const {name, email, password, image} = req.body;
+app.post("/register", (req, res) => {
+    console.log("Request body:", req.body); // Log request body
+    const { name, email, password, image } = req.body;
 
-    const newUser = new User({name,email, password, image})
+    const newUser = new User({ name, email, password, image });
 
-    //save user to mongo 
-    newUser.save().then(() =>{ 
-        res.status(200).json({message: 
-            "User registered successfully"
-        })
-    }).catch((err) => { 
-        console.log("Error registering user"); 
-        res.status(500).json({message: 
-            "Error registering user"})
+    // save user to mongo
+    newUser.save().then(() => {
+        res.status(200).json({ message: "User registered successfully" });
+    }).catch((err) => {
+        console.log("Error registering user", err);
+        res.status(500).json({ message: "Error registering user" });
     });
 });
