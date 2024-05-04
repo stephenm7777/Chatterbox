@@ -6,41 +6,46 @@ import axios from 'axios';
 const RegisterScreen = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [name, setName] = useState("");
     const [image, setImage] = useState("");
 
     const navigation = useNavigation();
 
     const handleRegister = () => {
-        const user = {
-            name: name,
-            email: email,
-            password: password,
-            image: image,
-        };
-
-        // send a POST  request to the backend API to register the user
-        axios
-            .post("http://localhost:8000/register", user)
-            .then((response) => {
+        if (password === confirmPassword) {
+            console.log("Passwords match:", password);
+            const user = {
+                name: name,
+                email: email,
+                password: password,
+                image: image
+            }
+            // send POST to backend 
+            axios.post("http://localhost:8000/register", user).then((response) => {
                 console.log(response);
                 Alert.alert(
                     "Registration successful",
-                    "You have been registered Successfully"
+                    "You have been registered"
                 );
                 setName("");
                 setEmail("");
-                setPassword("");
+                setPassword("")
+                setConfirmPassword("")
                 setImage("");
-            })
-            .catch((error) => {
+            }).catch((error) => {
                 Alert.alert(
-                    "Registration Error",
-                    "An error occurred while registering"
-                );
-                console.log("registration failed", error);
-            });
+                    "Registration Error"
+                )
+                console.log("Registration failed", error)
+            })
+        } else {
+            Alert.alert("Passwords do not match. Please try again.");
+            setPassword(""); 
+            setConfirmPassword("");
+        }
     };
+
     return (
         <View style={{ flex: 1, backgroundColor: "#010C80", padding: 10, alignItems: "center" }}>
             <ScrollView
@@ -103,6 +108,23 @@ const RegisterScreen = () => {
                                 }}
                                 placeholderTextColor={"#F8FAFC"}
                                 placeholder='Enter password' />
+                        </View>
+                    </View>
+
+                    <View style={{ marginTop: 10 }}>
+                        <View>
+                            <Text style={{ color: "gray", fontSize: 18, fontWeight: "600" }}>Confirm Password</Text>
+                            <TextInput
+                                value={confirmPassword}
+                                onChangeText={(text) => setConfirmPassword(text)}
+                                secureTextEntry={true}
+                                style={{
+                                    fontSize: confirmPassword ? 18 : 18,
+                                    color: "#FFFFFF",
+                                    borderBottomColor: "#F8FAFC", borderBottomWidth: 1, marginVertical: 10, width: 300
+                                }}
+                                placeholderTextColor={"#F8FAFC"}
+                                placeholder='Confirm password' />
                         </View>
                     </View>
 
