@@ -1,4 +1,4 @@
-import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, Image } from 'react-native'
 import React, { useState } from 'react'
 import { useNavigation } from '@react-navigation/native';
 
@@ -8,7 +8,11 @@ const LoginScreen = () => {
     const navigation = useNavigation();
     return (
         <View style={{ flex: 1, backgroundColor: "#010C80", padding: 10, alignItems: "center" }}>
-            <KeyboardAvoidingView>
+            <KeyboardAvoidingView style={{ alignItems: "center" }}>
+                <Image
+                    source={require('../img/png/logo-no-background.png')}
+                    style={{ width: 200, height: 200, resizeMode: "contain" }}
+                />
                 <View style={{ marginTop: 100, justifyContent: "center", alignItems: "center" }}>
                     <Text style={{ color: "#F8FAFC", fontSize: 17, fontWeight: "600" }}>Sign in</Text>
                     <Text style={{ color: "#F8FAFC", fontSize: 17, fontWeight: "600", marginTop: 15 }}>Sign In to Your Account</Text>
@@ -53,11 +57,11 @@ const LoginScreen = () => {
                     marginRight: "auto",
                     borderRadius: 6
                 }}>
-                    <Text style={{fontSize:16, fontWeight:"bold", textAlign:"center"}}>Login</Text>
+                    <Text style={{ fontSize: 16, fontWeight: "bold", textAlign: "center" }}>Login</Text>
                 </Pressable>
 
-                <Pressable onPress={() => navigation.navigate("Register")} style={{marginTop:15}}>
-                    <Text style={{textAlign:"center", color:'#F8FAFC'}}>Don't have an account? Sign Up</Text>
+                <Pressable onPress={() => navigation.navigate("Register")} style={{ marginTop: 15 }}>
+                    <Text style={{ textAlign: "center", color: '#F8FAFC' }}>Don't have an account? Sign Up</Text>
                 </Pressable>
             </KeyboardAvoidingView>
         </View>
