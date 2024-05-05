@@ -1,49 +1,43 @@
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, Image, ScrollView, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import axios from 'axios';
+import { initializeApp } from '@firebase/app';
+import { getAuth, createUserWithEmailAndPassword } from '@firebase/auth';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDyiBg7M418a5F0VW7uHLzpTtO2fou7g6U",
+  authDomain: "chatterbox-e329c.firebaseapp.com",
+  projectId: "chatterbox-e329c",
+  storageBucket: "chatterbox-e329c.appspot.com",
+  messagingSenderId: "293387970762",
+  appId: "1:293387970762:web:4ac39d1559141bb28e6c33"
+};
+
+initializeApp(firebaseConfig);
 
 const RegisterScreen = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [name, setName] = useState("");
-
     const navigation = useNavigation();
 
     const handleRegister = () => {
-        if (password === confirmPassword) {
-            console.log("Passwords match:", password);
-            const user = {
-                name: name,
-                email: email,
-                password: password,
-                image: image
-            }
-            // send POST to backend 
-            axios.post("http://192.168.1.215:8000/register", user).then((response) => {
-                console.log(response);
-                Alert.alert(
-                    "Registration successful",
-                    "You have been registered"
-                );
-                setName("");
-                setEmail("");
-                setPassword("")
-                setConfirmPassword("")
-                setImage("");
-            }).catch((error) => {
-                Alert.alert(
-                    "Registration Error"
-                )
-                console.log("Registration failed", error)
-            })
-        } else {
-            Alert.alert("Passwords do not match. Please try again.");
-            setPassword(""); 
-            setConfirmPassword("");
+        if (password !== confirmPassword) {
+            Alert.alert('Error', 'Passwords do not match.');
+            return;
         }
-    };
+
+        createUserWithEmailAndPassword(getAuth(), email, password)
+            .then(userCredential => {
+                const user = userCredential.user;
+                console.log("User registered:", user);
+                navigation.navigate("Chat");
+            })
+            .catch(error => {
+                console.error(error);
+                Alert.alert('Error', 'Failed to register. Please try again.');
+            });
+    }
 
     return (
         <View style={{ flex: 1, backgroundColor: "#010C80", padding: 10, alignItems: "center" }}>
@@ -61,22 +55,6 @@ const RegisterScreen = () => {
                         <Text style={{ color: "#F8FAFC", fontSize: 17, fontWeight: "600" }}>Register</Text>
                     </View>
 
-                    <View style={{ marginTop: 50 }}>
-                        <View>
-                            <Text style={{ color: "gray", fontSize: 18, fontWeight: "600" }}>Name</Text>
-                            <TextInput
-                                value={name}
-                                onChangeText={(text) => setName(text)}
-                                style={{
-                                    fontSize: name ? 18 : 18,
-                                    color: "#FFFFFF",
-                                    borderBottomColor: "#F8FAFC", borderBottomWidth: 1, marginVertical: 10, width: 300
-                                }}
-                                placeholderTextColor={"#F8FAFC"}
-                                placeholder='Enter name' />
-                        </View>
-                    </View>
-
                     <View style={{ marginTop: 10 }}>
                         <View>
                             <Text style={{ color: "gray", fontSize: 18, fontWeight: "600" }}>Email</Text>
@@ -85,7 +63,7 @@ const RegisterScreen = () => {
                                 onChangeText={(text) => setEmail(text)}
                                 style={{
                                     fontSize: email ? 18 : 18,
-                                    color: "#FFFFFF", // Set text color to white
+                                    color: "#FFFFFF",
                                     borderBottomColor: "#F8FAFC", borderBottomWidth: 1, marginVertical: 10, width: 300
                                 }}
                                 placeholderTextColor={"#F8FAFC"}
@@ -132,8 +110,6 @@ const RegisterScreen = () => {
                         backgroundColor: "#F8FAFC",
                         padding: 15,
                         marginTop: 50,
-                        marginLeft: "auto",
-                        marginRight: "auto",
                         borderRadius: 6
                     }}>
                         <Text style={{ fontSize: 16, fontWeight: "bold", textAlign: "center" }}>Register</Text>
