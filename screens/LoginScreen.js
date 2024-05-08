@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, Image, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, signInWithEmailAndPassword } from '@firebase/auth';
-import { getDatabase, ref, push } from 'firebase/database';
+import { getDatabase, ref, push, get } from 'firebase/database';
 
 const LoginScreen = () => {
     const [email, setEmail] = useState("");
@@ -20,7 +20,23 @@ const LoginScreen = () => {
 
             const db = getDatabase();
             const usersRef = ref(db, 'users');
-            push(usersRef, email);
+
+            // Check if the user already exists in the database
+            const snapshot = await get(usersRef);
+            let userExists = false;
+            snapshot.forEach((childSnapshot) => {
+                if (childSnapshot.val() === email) {
+                    userExists = true;
+                    return;
+                }
+            });
+
+            if (!userExists) {
+                // If user does not exist, add them to the database
+                push(usersRef, email);
+            } else {
+                console.log("User already exists in the database");
+            }
 
             navigation.navigate("Chat");
         } catch (error) {
