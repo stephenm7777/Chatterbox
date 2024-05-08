@@ -19,7 +19,7 @@ const ChatScreen = () => {
         try {
             const auth = getAuth();
             await signOut(auth);
-            navigation.navigate('Login'); 
+            navigation.navigate('Login');
         } catch (error) {
             console.error('Sign out error', error);
         }
@@ -50,11 +50,24 @@ const ChatScreen = () => {
         try {
             const db = getDatabase();
             const usersRef = ref(db, 'users');
-            const searchQuery = query(usersRef, orderByChild('email'), equalTo(searchEmail));
-            const snapshot = await get(searchQuery);
+            const snapshot = await get(usersRef);
+
             if (snapshot.exists()) {
-                setSearchResult(true);
-                Alert.alert('User found', `User with email ${searchEmail} exists.`);
+                let userExists = false;
+                snapshot.forEach((childSnapshot) => {
+                    if (childSnapshot.val() === searchEmail) {
+                        userExists = true;
+                        return;
+                    }
+                });
+
+                if (userExists) {
+                    setSearchResult(true);
+                    Alert.alert('User found', `User with email ${searchEmail} exists.`);
+                } else {
+                    setSearchResult(false);
+                    Alert.alert('User not found', `User with email ${searchEmail} does not exist.`);
+                }
             } else {
                 setSearchResult(false);
                 Alert.alert('User not found', `User with email ${searchEmail} does not exist.`);
