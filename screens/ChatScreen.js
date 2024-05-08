@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, FlatList, StyleSheet, Text, Pressable, Modal, TextInput, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { getAuth, signOut } from '@firebase/auth';
+import { getAuth, signOut, getDatabase, ref, child, get, query, orderByChild, equalTo } from '@firebase/database';
 
 const ChatScreen = () => {
     const [conversations, setConversations] = useState([
@@ -13,12 +13,13 @@ const ChatScreen = () => {
     const [showSignOut, setShowSignOut] = useState(false);
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [searchEmail, setSearchEmail] = useState('');
+    const [searchResult, setSearchResult] = useState(null);
 
     const signOutUser = async () => {
         try {
             const auth = getAuth();
             await signOut(auth);
-            navigation.navigate('Home'); 
+            navigation.navigate('Login'); 
         } catch (error) {
             console.error('Sign out error', error);
         }
@@ -45,46 +46,58 @@ const ChatScreen = () => {
         }
     };
 
-    const searchUser = () => {
-        // Add your search logic here
-        Alert.alert('Searching', `Searching for user with email: ${searchEmail}`);
-        setSearchEmail('');
-        toggleSearchModal();
+    const searchUser = async () => {
+        try {
+            const db = getDatabase();
+            const usersRef = ref(db, 'users');
+            const searchQuery = query(usersRef, orderByChild('email'), equalTo(searchEmail));
+            const snapshot = await get(searchQuery);
+            if (snapshot.exists()) {
+                setSearchResult(true);
+                Alert.alert('User found', `User with email ${searchEmail} exists.`);
+            } else {
+                setSearchResult(false);
+                Alert.alert('User not found', `User with email ${searchEmail} does not exist.`);
+            }
+        } catch (error) {
+            console.error('Search error', error);
+        }
     };
 
     return (
         <View style={styles.container}>
-            <Pressable onPress={toggleSignOut} style={styles.dropDown}>
-                <Text style={styles.dropDownText}>Options</Text>
+            <Pressable onPress={toggleSearchModal} style={styles.dropDown}>
+                <Text style={styles.dropDownText}>Search Users</Text>
+            </Pressable>
+            <Pressable onPress={toggleSignOut} style={styles.signOutButton}>
+                <Text style={styles.signOutText}>Sign Out</Text>
             </Pressable>
             <Modal
                 animationType="slide"
                 transparent={true}
-                visible={showSignOut || showSearchModal}
-                onRequestClose={handleBackdropPress}
+                visible={showSearchModal}
+                onRequestClose={toggleSearchModal}
             >
                 <Pressable style={styles.modalBackdrop} onPress={handleBackdropPress}>
                     <View style={styles.modalView}>
-                        {showSignOut && (
-                            <Pressable onPress={signOutUser} style={styles.optionButton}>
-                                <Text style={styles.optionText}>Sign Out</Text>
+                        <View style={styles.searchContainer}>
+                            <Text style={styles.searchTitle}>Search Users</Text>
+                            <TextInput
+                                style={styles.searchInput}
+                                value={searchEmail}
+                                onChangeText={setSearchEmail}
+                                placeholder="Enter user email"
+                                placeholderTextColor="#999"
+                            />
+                            <Pressable onPress={searchUser} style={styles.searchButton}>
+                                <Text style={styles.searchButtonText}>Search</Text>
                             </Pressable>
-                        )}
-                        {showSearchModal && (
-                            <View style={styles.searchContainer}>
-                                <Text style={styles.searchTitle}>Search Users</Text>
-                                <TextInput
-                                    style={styles.searchInput}
-                                    value={searchEmail}
-                                    onChangeText={setSearchEmail}
-                                    placeholder="Enter user email"
-                                    placeholderTextColor="#999"
-                                />
-                                <Pressable onPress={searchUser} style={styles.searchButton}>
-                                    <Text style={styles.searchButtonText}>Search</Text>
-                                </Pressable>
-                            </View>
-                        )}
+                            {searchResult !== null && (
+                                <Text style={styles.searchResultText}>
+                                    {searchResult ? 'User exists' : 'User does not exist'}
+                                </Text>
+                            )}
+                        </View>
                     </View>
                 </Pressable>
             </Modal>
@@ -129,7 +142,6 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 8,
         marginBottom: 10,
-        marginTop: 30, 
         alignItems: 'center',
     },
     dropDownText: {
@@ -137,29 +149,34 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
-    modalView: {
-        backgroundColor: '#FFFFFF',
-        padding: 20,
-        borderRadius: 8,
-    },
-    modalBackdrop: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'flex-end',
-    },
-    optionButton: {
+    signOutButton: {
         backgroundColor: '#FF0000',
         padding: 10,
         borderRadius: 8,
         marginBottom: 10,
         alignItems: 'center',
     },
-    optionText: {
+    signOutText: {
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: 'bold',
     },
+    modalView: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalBackdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+    },
     searchContainer: {
+        backgroundColor: '#FFFFFF',
+        padding: 20,
+        borderRadius: 8,
+        width: '100%',
         alignItems: 'center',
     },
     searchTitle: {
@@ -183,6 +200,11 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    searchResultText: {
+        marginTop: 10,
+        fontWeight: 'bold',
+        color: '#010C80',
     },
 });
 

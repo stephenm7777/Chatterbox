@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, Image, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, signInWithEmailAndPassword } from '@firebase/auth';
+import { getDatabase, ref, push } from 'firebase/database';
 
 const LoginScreen = () => {
     const [email, setEmail] = useState("");
@@ -9,23 +10,25 @@ const LoginScreen = () => {
     const [loading, setLoading] = useState(false); // For showing loading indicator
     const navigation = useNavigation();
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         setLoading(true); // Show loading indicator
-        signInWithEmailAndPassword(getAuth(), email, password)
-            .then((userCredential) => {
-                // Signed in 
-                const user = userCredential.user;
-                console.log("User logged in:", user);
-                // Navigate to the chat screen
-                navigation.navigate("Chat");
-            })
-            .catch((error) => {
-                console.error(error);
-                Alert.alert('Error', 'Invalid email or password.');
-            })
-            .finally(() => {
-                setLoading(false); // Hide loading indicator
-            });
+        try {
+            const auth = getAuth();
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            console.log("User logged in:", user);
+
+            const db = getDatabase();
+            const usersRef = ref(db, 'users');
+            push(usersRef, email);
+
+            navigation.navigate("Chat");
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Error', 'Invalid email or password.');
+        } finally {
+            setLoading(false); 
+        }
     }
 
     return (

@@ -1,24 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, FlatList, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { getDatabase, ref, push, remove, onValue } from '@firebase/database';
 
 const IndividualChat = () => {
   const [sentMessages, setSentMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const navigation = useNavigation();
 
+  useEffect(() => {
+    const db = getDatabase();
+    const messagesRef = ref(db, 'messages');
+
+    const unsubscribe = onValue(messagesRef, (snapshot) => {
+      const messages = [];
+      snapshot.forEach((childSnapshot) => {
+        messages.push({
+          id: childSnapshot.key,
+          ...childSnapshot.val()
+        });
+      });
+      setSentMessages(messages.reverse());
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const handleSend = () => {
     if (newMessage.trim() === "") return;
 
-    setSentMessages(prevMessages => [
-      {
-        id: Math.random().toString(),
-        text: newMessage.trim(),
-        timestamp: new Date().toISOString()
-      },
-      ...prevMessages,
-    ]);
-    setNewMessage("");
+    const db = getDatabase();
+    const messagesRef = ref(db, 'messages');
+    
+    push(messagesRef, {
+      text: newMessage.trim(),
+      timestamp: new Date().toISOString()
+    }).then(() => {
+      setNewMessage("");
+    }).catch(error => {
+      console.error("Error sending message:", error);
+    });
   };
 
   const handleDelete = (id) => {
@@ -33,7 +54,9 @@ const IndividualChat = () => {
         {
           text: 'Delete',
           onPress: () => {
-            setSentMessages(prevMessages => prevMessages.filter(msg => msg.id !== id));
+            const db = getDatabase();
+            const messageRef = ref(db, `messages/${id}`);
+            remove(messageRef);
           }
         }
       ]
@@ -150,4 +173,3 @@ const styles = StyleSheet.create({
 });
 
 export default IndividualChat;
-
