@@ -97,7 +97,7 @@ const LoginScreen = () => {
                         <Text style={{ textAlign: "center", color: '#F8FAFC' }}>Don't have an account? Sign Up</Text>
                     </Pressable>
                     <Pressable onPress={() => navigation.navigate("ForgotPassword")} style={{ marginTop: 15 }}>
-                        <Text style={{ textAlign: "center", color: '#F8FAFC' }}>Forgot Password? Click here</Text>
+                        <Text style={{ textAlign: "center", color: '#F8FAFC' }}>Forgot Password?</Text>
                     </Pressable>
                 </KeyboardAvoidingView>
             </ScrollView>
