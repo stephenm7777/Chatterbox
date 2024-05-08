@@ -1,88 +1,153 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, FlatList } from 'react-native';
+import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, FlatList, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
-const IndivdualChat = () => {
-    const [messages, setMessages] = useState([]);
-    const [newMessage, setNewMessage] = useState("");
+const IndividualChat = () => {
+  const [sentMessages, setSentMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const navigation = useNavigation();
 
-    const handleSend = () => {
-        if (newMessage.trim() === "") return;
+  const handleSend = () => {
+    if (newMessage.trim() === "") return;
 
-        setMessages(prevMessages => [
-            ...prevMessages,
-            {
-                id: Math.random().toString(),
-                text: newMessage.trim(),
-                timestamp: new Date().toISOString()
-            }
-        ]);
-        setNewMessage("");
-    };
+    setSentMessages(prevMessages => [
+      {
+        id: Math.random().toString(),
+        text: newMessage.trim(),
+        timestamp: new Date().toISOString()
+      },
+      ...prevMessages,
+    ]);
+    setNewMessage("");
+  };
 
-    return (
-        <View style={{ flex: 1, backgroundColor: '#010C80', padding: 10 }}>
-            <FlatList
-                inverted
-                data={messages}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.messageContainer}>
-                        <Text style={styles.messageText}>{item.text}</Text>
-                    </View>
-                )}
-            />
-            <KeyboardAvoidingView behavior="padding" style={styles.inputContainer}>
-                <TextInput
-                    value={newMessage}
-                    onChangeText={setNewMessage}
-                    style={styles.input}
-                    placeholder="Type a message..."
-                    placeholderTextColor="#F8FAFC"
-                />
-                <Pressable onPress={handleSend} style={styles.sendButton}>
-                    <Text style={styles.sendButtonText}>Send</Text>
-                </Pressable>
-            </KeyboardAvoidingView>
-        </View>
+  const handleDelete = (id) => {
+    Alert.alert(
+      'Delete Message',
+      'This action will delete the message only for you. The other user can still see it.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete',
+          onPress: () => {
+            setSentMessages(prevMessages => prevMessages.filter(msg => msg.id !== id));
+          }
+        }
+      ]
     );
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Pressable
+          onPress={() => navigation.navigate("Chat")}
+          style={({ pressed }) => [
+            {
+              marginTop: 20,
+              marginBottom: 20, 
+              backgroundColor: '#F8FAFC', 
+              paddingVertical: 10,
+              paddingHorizontal: 20,
+              borderRadius: 8,
+              opacity: pressed ? 0.8 : 1,
+            },
+          ]}
+        >
+          <Text style={{ textAlign: "center", color: '#010C80' }}>Back</Text>
+        </Pressable>
+      </View>
+      <FlatList
+        data={sentMessages}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.messageContainer}>
+            <Text style={styles.messageText}>{item.text}</Text>
+            <Pressable onPress={() => handleDelete(item.id)} style={styles.deleteButton}>
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </Pressable>
+          </View>
+        )}
+        inverted={true}
+      />
+      <KeyboardAvoidingView behavior="padding" style={styles.inputContainer}>
+        <TextInput
+          value={newMessage}
+          onChangeText={setNewMessage}
+          style={styles.input}
+          placeholder="Type a message..."
+          placeholderTextColor="#010C80"
+        />
+        <Pressable onPress={handleSend} style={styles.sendButton}>
+          <Text style={styles.sendButtonText}>Send</Text>
+        </Pressable>
+      </KeyboardAvoidingView>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 10,
-    },
-    input: {
-        flex: 1,
-        backgroundColor: '#F8FAFC',
-        padding: 12,
-        borderRadius: 8,
-        marginRight: 10,
-        color: '#010C80',
-    },
-    sendButton: {
-        backgroundColor: '#F8FAFC',
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 8,
-    },
-    sendButtonText: {
-        color: '#010C80',
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    messageContainer: {
-        backgroundColor: '#F8FAFC',
-        padding: 10,
-        borderRadius: 8,
-        marginBottom: 10,
-        maxWidth: '80%',
-    },
-    messageText: {
-        color: '#010C80',
-        fontSize: 16,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#010C80',
+    padding: 10,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  input: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+    padding: 12,
+    borderRadius: 8,
+    marginRight: 10,
+    color: '#010C80',
+  },
+  sendButton: {
+    backgroundColor: '#F8FAFC',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  sendButtonText: {
+    color: '#010C80',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  messageContainer: {
+    backgroundColor: '#F8FAFC',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+    maxWidth: '80%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  messageText: {
+    color: '#010C80',
+    fontSize: 16,
+    flex: 1,
+  },
+  deleteButton: {
+    backgroundColor: '#FF0000',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 5,
+  },
+  deleteButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+  },
 });
 
-export default IndivdualChat
+export default IndividualChat;
+

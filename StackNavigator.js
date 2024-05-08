@@ -23,7 +23,7 @@ const MyStack = () => {
         <Stack.Screen name="Chat" component={ChatScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
         <Stack.Screen name="IndivdualChat" component={IndivdualChat} />
-        
+
       </Stack.Navigator>
     </NavigationContainer>
   );
