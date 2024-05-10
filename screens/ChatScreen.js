@@ -14,6 +14,7 @@ const ChatScreen = () => {
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [searchEmail, setSearchEmail] = useState('');
     const [searchResult, setSearchResult] = useState(null);
+    const [foundUser, setFoundUser] = useState(null); // State to store found user
 
     const signOutUser = async () => {
         try {
@@ -57,6 +58,7 @@ const ChatScreen = () => {
                 snapshot.forEach((childSnapshot) => {
                     if (childSnapshot.val() === searchEmail) {
                         userExists = true;
+                        setFoundUser({ id: childSnapshot.key, email: searchEmail }); // Store found user
                         return;
                     }
                 });
@@ -74,6 +76,14 @@ const ChatScreen = () => {
             }
         } catch (error) {
             console.error('Search error', error);
+        }
+    };
+
+    const sendMessage = () => {
+        if (foundUser) {
+            navigation.navigate('IndivdualChat', { user: foundUser });
+        } else {
+            Alert.alert('User not found', 'Please search for a user first.');
         }
     };
 
@@ -124,6 +134,9 @@ const ChatScreen = () => {
                     </Pressable>
                 )}
             />
+            <Pressable onPress={sendMessage} style={styles.sendMessageButton}>
+                <Text style={styles.sendMessageText}>Send Message</Text>
+            </Pressable>
         </View>
     );
 };
@@ -218,6 +231,18 @@ const styles = StyleSheet.create({
         marginTop: 10,
         fontWeight: 'bold',
         color: '#010C80',
+    },
+    sendMessageButton: {
+        backgroundColor: '#010C80',
+        padding: 10,
+        borderRadius: 8,
+        marginBottom: 10,
+        alignItems: 'center',
+    },
+    sendMessageText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 
