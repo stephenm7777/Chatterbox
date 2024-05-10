@@ -1,20 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, Text, Pressable, Modal, TextInput, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { getAuth, signOut, getDatabase, ref, child, get, query, orderByChild, equalTo } from '@firebase/database';
+import { getAuth, signOut, getDatabase, ref, get, query, orderByChild, equalTo, remove } from '@firebase/database';
 
 const ChatScreen = () => {
-    const [conversations, setConversations] = useState([
-        { id: '1', user: 'User 1', lastMessage: 'Hello', timestamp: '2024-05-01T12:00:00Z' },
-        { id: '2', user: 'User 2', lastMessage: 'Hi there', timestamp: '2024-05-02T12:00:00Z' },
-        { id: '3', user: 'User 3', lastMessage: 'Hey', timestamp: '2024-05-03T12:00:00Z' },
-    ]);
+    const [conversations, setConversations] = useState([]);
+    const [messagePreview, setMessagePreview] = useState('');
     const navigation = useNavigation();
     const [showSignOut, setShowSignOut] = useState(false);
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [searchEmail, setSearchEmail] = useState('');
     const [searchResult, setSearchResult] = useState(null);
     const [foundUser, setFoundUser] = useState(null); // State to store found user
+
+    useEffect(() => {
+        fetchConversations();
+    }, []);
+
+    const fetchConversations = async () => {
+        try {
+            const db = getDatabase();
+            const conversationsRef = ref(db, 'conversations');
+            const snapshot = await get(conversationsRef);
+
+            if (snapshot.exists()) {
+                const fetchedConversations = [];
+                snapshot.forEach((childSnapshot) => {
+                    const conversation = childSnapshot.val();
+                    // Filter conversations where the user is participating
+                    if (conversation.user1 === 'User' || conversation.user2 === 'User') {
+                        fetchedConversations.push({ id: childSnapshot.key, ...conversation });
+                    }
+                });
+                setConversations(fetchedConversations);
+            }
+        } catch (error) {
+            console.error('Fetch conversations error', error);
+        }
+    };
 
     const signOutUser = async () => {
         try {
@@ -34,7 +57,8 @@ const ChatScreen = () => {
         setShowSearchModal(!showSearchModal);
     };
 
-    const navigateToChat = () => {
+    const navigateToChat = (conversation) => {
+        setMessagePreview(conversation.lastMessage);
         navigation.navigate("IndivdualChat");
     };
 
@@ -68,6 +92,7 @@ const ChatScreen = () => {
                     Alert.alert('User found', `User with email ${searchEmail} exists.`);
                 } else {
                     setSearchResult(false);
+                    setFoundUser(null); // Clear found user
                     Alert.alert('User not found', `User with email ${searchEmail} does not exist.`);
                 }
             } else {
@@ -78,12 +103,24 @@ const ChatScreen = () => {
             console.error('Search error', error);
         }
     };
-
+    
     const sendMessage = () => {
         if (foundUser) {
-            navigation.navigate('IndivdualChat', { user: foundUser });
+            navigation.navigate('IndivdualChat', { sender: 'You', receiver: foundUser.email });
         } else {
             Alert.alert('User not found', 'Please search for a user first.');
+        }
+    };
+
+    const deleteMessage = async (conversationId) => {
+        try {
+            const db = getDatabase();
+            const conversationRef = ref(db, `conversations/${conversationId}`);
+            await remove(conversationRef);
+            Alert.alert('Message deleted', 'The conversation has been deleted.');
+            fetchConversations(); // Fetch updated conversations
+        } catch (error) {
+            console.error('Delete message error', error);
         }
     };
 
@@ -120,6 +157,11 @@ const ChatScreen = () => {
                                     {searchResult ? 'User exists' : 'User does not exist'}
                                 </Text>
                             )}
+                            {foundUser && (
+                                <Pressable onPress={sendMessage} style={styles.sendMessageButton}>
+                                    <Text style={styles.sendMessageText}>Send Message</Text>
+                                </Pressable>
+                            )}
                         </View>
                     </View>
                 </Pressable>
@@ -128,15 +170,20 @@ const ChatScreen = () => {
                 data={conversations}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <Pressable onPress={navigateToChat} style={styles.conversation}>
-                        <Text style={styles.user}>{item.user}</Text>
-                        <Text style={styles.lastMessage}>{item.lastMessage}</Text>
-                    </Pressable>
+                    <View style={styles.conversation}>
+                        <Pressable onPress={() => navigateToChat(item)}>
+                            <Text style={styles.user}>
+                                {item.user1 === 'User' ? item.user2 : item.user1}
+                            </Text>
+                            <Text style={styles.lastMessage}>{item.lastMessage}</Text>
+                        </Pressable>
+                        <Pressable onPress={() => deleteMessage(item.id)} style={styles.deleteButton}>
+                            <Text style={styles.deleteButtonText}>Delete</Text>
+                        </Pressable>
+                    </View>
                 )}
             />
-            <Pressable onPress={sendMessage} style={styles.sendMessageButton}>
-                <Text style={styles.sendMessageText}>Send Message</Text>
-            </Pressable>
+            <Text style={styles.previewMessage}>{messagePreview}</Text>
         </View>
     );
 };
@@ -152,6 +199,9 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 8,
         marginBottom: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     user: {
         color: '#010C80',
@@ -162,6 +212,15 @@ const styles = StyleSheet.create({
     lastMessage: {
         color: '#010C80',
         fontSize: 16,
+    },
+    deleteButton: {
+        backgroundColor: '#FF0000',
+        padding: 5,
+        borderRadius: 5,
+    },
+    deleteButtonText: {
+        color: '#FFFFFF',
+        fontSize: 14,
     },
     dropDown: {
         backgroundColor: '#F8FAFC',
@@ -191,11 +250,11 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'flex-end',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'transparent',
     },
     modalBackdrop: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'transparent', 
         justifyContent: 'flex-end',
     },
     searchContainer: {
@@ -243,6 +302,11 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    previewMessage: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        marginTop: 10,
     },
 });
 
