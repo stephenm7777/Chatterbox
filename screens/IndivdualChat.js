@@ -31,7 +31,7 @@ const IndividualChat = () => {
 
     const db = getDatabase();
     const messagesRef = ref(db, 'messages');
-    
+
     push(messagesRef, {
       text: newMessage.trim(),
       timestamp: new Date().toISOString()
@@ -71,8 +71,8 @@ const IndividualChat = () => {
           style={({ pressed }) => [
             {
               marginTop: 20,
-              marginBottom: 20, 
-              backgroundColor: '#F8FAFC', 
+              marginBottom: 20,
+              backgroundColor: '#F8FAFC',
               paddingVertical: 10,
               paddingHorizontal: 20,
               borderRadius: 8,
@@ -83,19 +83,21 @@ const IndividualChat = () => {
           <Text style={{ textAlign: "center", color: '#010C80' }}>Back</Text>
         </Pressable>
       </View>
-      <FlatList
-        data={sentMessages}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.messageContainer}>
-            <Text style={styles.messageText}>{item.text}</Text>
-            <Pressable onPress={() => handleDelete(item.id)} style={styles.deleteButton}>
-              <Text style={styles.deleteButtonText}>Delete</Text>
-            </Pressable>
-          </View>
-        )}
-        inverted={true}
-      />
+      <Container>
+        <FlatList
+          data={sentMessages}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.messageContainer}>
+              <Text style={styles.messageText}>{item.text}</Text>
+              <Pressable onPress={() => handleDelete(item.id)} style={styles.deleteButton}>
+                <Text style={styles.deleteButtonText}>Delete</Text>
+              </Pressable>
+            </View>
+          )}
+          inverted={true}
+        />
+      </Container>
       <KeyboardAvoidingView behavior="padding" style={styles.inputContainer}>
         <TextInput
           value={newMessage}
@@ -108,7 +110,7 @@ const IndividualChat = () => {
           <Text style={styles.sendButtonText}>Send</Text>
         </Pressable>
       </KeyboardAvoidingView>
-    </View>
+    </View >
   );
 };
 

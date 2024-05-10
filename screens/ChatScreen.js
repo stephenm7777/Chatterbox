@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, Text, Pressable, Modal, TextInput, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { getAuth, signOut, getDatabase, ref, get, query, orderByChild, equalTo, remove } from '@firebase/database';
+import { getAuth, signOut, getDatabase, ref, get, remove } from '@firebase/database';
 
 const ChatScreen = () => {
     const [conversations, setConversations] = useState([]);
@@ -11,7 +11,7 @@ const ChatScreen = () => {
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [searchEmail, setSearchEmail] = useState('');
     const [searchResult, setSearchResult] = useState(null);
-    const [foundUser, setFoundUser] = useState(null); // State to store found user
+    const [foundUser, setFoundUser] = useState(null);
 
     useEffect(() => {
         fetchConversations();
@@ -20,14 +20,13 @@ const ChatScreen = () => {
     const fetchConversations = async () => {
         try {
             const db = getDatabase();
-            const conversationsRef = ref(db, 'conversations');
+            const conversationsRef = ref(db, 'messages');
             const snapshot = await get(conversationsRef);
 
             if (snapshot.exists()) {
                 const fetchedConversations = [];
                 snapshot.forEach((childSnapshot) => {
                     const conversation = childSnapshot.val();
-                    // Filter conversations where the user is participating
                     if (conversation.user1 === 'User' || conversation.user2 === 'User') {
                         fetchedConversations.push({ id: childSnapshot.key, ...conversation });
                     }
