@@ -61,6 +61,10 @@ const ChatScreen = () => {
         navigation.navigate("IndivdualChat");
     };
 
+    const navigateToProfile = () => {
+        navigation.navigate("Profile");
+    };
+
     const handleBackdropPress = () => {
         if (showSignOut) {
             toggleSignOut();
@@ -130,6 +134,9 @@ const ChatScreen = () => {
             </Pressable>
             <Pressable onPress={toggleSignOut} style={styles.signOutButton}>
                 <Text style={styles.signOutText}>Sign Out</Text>
+            </Pressable>
+            <Pressable onPress={navigateToProfile} style={styles.profileButton}>
+                <Text style={styles.profileButtonText}>Profile</Text>
             </Pressable>
             <Modal
                 animationType="slide"
@@ -241,6 +248,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     signOutText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    profileButton: {
+        backgroundColor: '#010C80',
+        padding: 10,
+        borderRadius: 8,
+        marginBottom: 10,
+        alignItems: 'center',
+    },
+    profileButtonText: {
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: 'bold',
