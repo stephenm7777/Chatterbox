@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TextInput, Button, Image, Alert } from 'react-native';
+import { View, StyleSheet, TextInput, Button, Image, Alert, Pressable, Text } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { getAuth, updateProfile, getDatabase, ref, set } from '@firebase/auth';
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from '@firebase/storage';
+import { getAuth, updateProfile } from 'firebase/auth'; // Update import
+import { getDatabase, ref, set } from 'firebase/database'; // Update import
+import { getStorage, ref as storageRef, uploadString, getDownloadURL } from 'firebase/storage'; // Update import
+import { useNavigation } from '@react-navigation/native';
 
 const ProfileScreen = () => {
   const [image, setImage] = useState(null);
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
+  const navigation = useNavigation();
 
   useEffect(() => {
     (async () => {
@@ -38,8 +41,8 @@ const ProfileScreen = () => {
 
       // Upload image
       const storage = getStorage();
-      const storageRef = ref(storage, `profileImages/${user.uid}.jpg`);
-      await uploadBytes(storageRef, image);
+      const storageRef = storageRef(storage, `profileImages/${user.uid}.jpg`);
+      await uploadString(storageRef, image, 'data_url');
 
       // Get image URL
       const imageUrl = await getDownloadURL(storageRef);
@@ -52,7 +55,7 @@ const ProfileScreen = () => {
 
       // Update bio in database
       const db = getDatabase();
-      const userRef = ref(db, `users/${user.uid}`);
+      const userRef = ref(db, `users/${user.uid}`); // Reference to the user's node
       await set(userRef, {
         name,
         bio,
@@ -89,6 +92,22 @@ const ProfileScreen = () => {
         placeholderTextColor="#010C80"
       />
       <Button title="Save" onPress={saveProfile} color="#010C80" />
+      <Pressable
+          onPress={() => navigation.navigate("Chat")}
+          style={({ pressed }) => [
+            {
+              marginTop: 20,
+              marginBottom: 20,
+              backgroundColor: '#F8FAFC',
+              paddingVertical: 10,
+              paddingHorizontal: 20,
+              borderRadius: 8,
+              opacity: pressed ? 0.8 : 1,
+            },
+          ]}
+        >
+          <Text style={{ textAlign: "center", color: '#010C80' }}>Back</Text>
+        </Pressable>
     </View>
   );
 };
