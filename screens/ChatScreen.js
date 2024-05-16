@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, Text, Pressable, Modal, TextInput, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { getAuth, signOut, getDatabase, ref, get, remove } from '@firebase/database';
+import { signOut, getDatabase, ref, get, push, remove } from '@firebase/database';
+import { Timestamp } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 const ChatScreen = () => {
     const [conversations, setConversations] = useState([]);
     const [messagePreview, setMessagePreview] = useState('');
     const navigation = useNavigation();
+    const youser = getAuth().currentUser;
     const [showSignOut, setShowSignOut] = useState(false);
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [searchEmail, setSearchEmail] = useState('');
@@ -17,19 +20,26 @@ const ChatScreen = () => {
         fetchConversations();
     }, []);
 
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+        if(user) {
+            fetchConversations();
+        }
+        else {
+            console.log("N/A");
+        }
+    });
+
     const fetchConversations = async () => {
         try {
             const db = getDatabase();
-            const conversationsRef = ref(db, 'messages');
+            await setUserId(youser);
+            const conversationsRef = ref(db, `users/${youser.id}/contacts`);
             const snapshot = await get(conversationsRef);
-
             if (snapshot.exists()) {
                 const fetchedConversations = [];
                 snapshot.forEach((childSnapshot) => {
-                    const conversation = childSnapshot.val();
-                    if (conversation.user1 === 'User' || conversation.user2 === 'User') {
-                        fetchedConversations.push({ id: childSnapshot.key, ...conversation });
-                    }
+                    fetchedConversations.push({id: childSnapshot.key, ...childSnapshot.val()});
                 });
                 setConversations(fetchedConversations);
             }
@@ -83,11 +93,13 @@ const ChatScreen = () => {
             if (snapshot.exists()) {
                 let userExists = false;
                 snapshot.forEach((childSnapshot) => {
-                    if (childSnapshot.val() === searchEmail) {
-                        userExists = true;
-                        setFoundUser({ id: childSnapshot.key, email: searchEmail }); // Store found user
-                        return;
-                    }
+                    childSnapshot.forEach((cs) => {
+                        if (cs.val() === searchEmail) {
+                            userExists = true;
+                            setFoundUser({ id: childSnapshot.key, email: searchEmail }); // Store found user
+                            return;
+                        }
+                    });
                 });
 
                 if (userExists) {
@@ -106,10 +118,58 @@ const ChatScreen = () => {
             console.error('Search error', error);
         }
     };
+
+    const setUserId = async(youser) => {
+        const db = getDatabase();
+        const usersRef = ref(db, 'users');
+        const snapshot = await get(usersRef);
+
+        if (snapshot.exists()) {
+            snapshot.forEach((childSnapshot) => {
+                childSnapshot.forEach((cs) => {
+                    self = childSnapshot.val();
+                    if (self.email.toLowerCase() === youser.email) {
+                        youser.id = childSnapshot.key;
+                    }
+                });
+            });
+        }        
+    };
     
-    const sendMessage = () => {
+    const sendMessage = async () => {
         if (foundUser) {
-            navigation.navigate('IndivdualChat', { sender: 'You', receiver: foundUser.email });
+            try{
+                const db = getDatabase();
+                const usersRef = ref(db, 'users');
+
+                setUserId(youser);
+                const userRef = ref(db, 'users/'+foundUser.id+'/contacts');
+                const snapshot = await get(userRef);
+                if(snapshot.exists()) {
+                    snapshot.forEach((childSnapshot) => {
+                        cs = childSnapshot.val();
+                        if(cs.id === youser.id) {
+                            alert("conversation with user already exists");
+                            throw Error("conversation already exists");
+                        }
+                    });
+                }
+                const selfRef = ref(db, 'users/'+youser.id+'/contacts');
+                const toReceiver = {
+                    id: youser.id,
+                    user: youser.email
+                };
+                push(userRef, toReceiver);
+                const toSender = {
+                    id: foundUser.id,
+                    user: foundUser.email
+                }
+                push(selfRef, toSender);
+                navigation.navigate('IndivdualChat', { sender: 'You', receiver: foundUser.email });
+            }
+            catch(error) {
+                console.log("send message error, " + error);
+            }
         } else {
             Alert.alert('User not found', 'Please search for a user first.');
         }
@@ -118,7 +178,8 @@ const ChatScreen = () => {
     const deleteMessage = async (conversationId) => {
         try {
             const db = getDatabase();
-            const conversationRef = ref(db, `conversations/${conversationId}`);
+            // unsafe deletion
+            const conversationRef = ref(db, `users/${youser.id}/contacts`);
             await remove(conversationRef);
             Alert.alert('Message deleted', 'The conversation has been deleted.');
             fetchConversations(); // Fetch updated conversations
@@ -179,7 +240,8 @@ const ChatScreen = () => {
                     <View style={styles.conversation}>
                         <Pressable onPress={() => navigateToChat(item)}>
                             <Text style={styles.user}>
-                                {item.user1 === 'User' ? item.user2 : item.user1}
+                                {/* Change this to usernames down the line*/}
+                                {item.user.toLowerCase() === youser.email ? item.user2 : item.user.toLowerCase()}
                             </Text>
                             <Text style={styles.lastMessage}>{item.lastMessage}</Text>
                         </Pressable>
@@ -189,7 +251,7 @@ const ChatScreen = () => {
                     </View>
                 )}
             />
-            <Text style={styles.previewMessage}>{messagePreview}</Text>
+            {/* <Text style={styles.previewMessage}>{messagePreview}</Text> */}
         </View>
     );
 };
