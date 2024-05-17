@@ -25,15 +25,17 @@ const LoginScreen = () => {
             const snapshot = await get(usersRef);
             let userExists = false;
             snapshot.forEach((childSnapshot) => {
-                if (childSnapshot.val() === email) {
-                    userExists = true;
-                    return;
-                }
+                childSnapshot.forEach((cs => {
+                    if (cs.val() === email) {
+                        userExists = true;
+                        return;
+                    }
+                }))  
             });
 
             if (!userExists) {
                 // If user does not exist, add them to the database
-                push(usersRef, email);
+                push(usersRef, {email});
             } else {
                 console.log("User already exists in the database");
             }

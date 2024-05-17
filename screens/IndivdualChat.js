@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, FlatList, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { getDatabase, ref, push, remove, onValue } from '@firebase/database';
+import { getDatabase, ref, get, push, remove, onValue, update } from '@firebase/database';
+import { getAuth } from 'firebase/auth';
 
 const IndividualChat = () => {
   const [sentMessages, setSentMessages] = useState([]);
@@ -11,7 +12,7 @@ const IndividualChat = () => {
   useEffect(() => {
     const db = getDatabase();
     const messagesRef = ref(db, 'messages');
-
+    
     const unsubscribe = onValue(messagesRef, (snapshot) => {
       const messages = [];
       snapshot.forEach((childSnapshot) => {
@@ -26,20 +27,62 @@ const IndividualChat = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (newMessage.trim() === "") return;
-
+    const youser = getAuth().currentUser;
     const db = getDatabase();
     const messagesRef = ref(db, 'messages');
-
-    push(messagesRef, {
+    setUserId(youser);
+    const insertMessage = {
       text: newMessage.trim(),
       timestamp: new Date().toISOString()
-    }).then(() => {
+    }
+
+    push(messagesRef, insertMessage).then(() => {
       setNewMessage("");
     }).catch(error => {
       console.error("Error sending message:", error);
     });
+
+    const contactRef = ref(db, `users/${youser.id}/contacts`);
+    let snapshot = await get(contactRef);
+    let user;
+    if(snapshot.exists()) {
+      snapshot.forEach((childSnapshot) => {
+        let cs = childSnapshot.val();
+        user = cs.id;
+        update(ref(db, 'users/' + youser.id + '/contacts/' + childSnapshot.key), {
+          lastMessage: insertMessage.text,
+          timestamp: insertMessage.timestamp
+        });
+      });
+    }
+    snapshot = await get(ref(db, `users/${user}/contacts`));
+    if(snapshot.exists()) {
+      snapshot.forEach((childSnapshot) => {
+        let cs = childSnapshot.val();
+        update(ref(db, 'users/' + user + '/contacts/' + childSnapshot.key), {
+          lastMessage: insertMessage.text,
+          timestamp: insertMessage.timestamp
+        });
+      });
+    }
+  };
+
+  const setUserId = async(youser) => {
+    const db = getDatabase();
+    const usersRef = ref(db, 'users');
+    const snapshot = await get(usersRef);
+    if (snapshot.exists()) {
+        snapshot.forEach((childSnapshot) => {
+            childSnapshot.forEach((cs) => {
+                self = childSnapshot.val();
+                if (self.email.toLowerCase() === youser.email) {
+                    youser.id = childSnapshot.key;
+                }
+            });
+        });
+    }   
   };
 
   const handleDelete = (id) => {
@@ -83,7 +126,8 @@ const IndividualChat = () => {
           <Text style={{ textAlign: "center", color: '#010C80' }}>Back</Text>
         </Pressable>
       </View>
-      <Container>
+      {/* <Container></Container> flagged errors*/}
+      <View>
         <FlatList
           data={sentMessages}
           keyExtractor={(item) => item.id}
@@ -97,7 +141,7 @@ const IndividualChat = () => {
           )}
           inverted={true}
         />
-      </Container>
+      </View>
       <KeyboardAvoidingView behavior="padding" style={styles.inputContainer}>
         <TextInput
           value={newMessage}
@@ -110,7 +154,7 @@ const IndividualChat = () => {
           <Text style={styles.sendButtonText}>Send</Text>
         </Pressable>
       </KeyboardAvoidingView>
-    </View >
+    </View>
   );
 };
 
