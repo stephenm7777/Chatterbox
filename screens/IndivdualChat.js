@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, FlatList, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, FlatList, Alert, ScrollView } from 'react-native';
+import { useNavigation} from '@react-navigation/native'; // Import GestureHandlerRootView
 import { getDatabase, ref, get, push, remove, onValue, update } from '@firebase/database';
 import { getAuth } from 'firebase/auth';
+import { LongPressGestureHandler, State, GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const IndividualChat = () => {
   const [sentMessages, setSentMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const [deleteVisible, setDeleteVisible] = useState(false);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -29,66 +31,45 @@ const IndividualChat = () => {
 
   const handleSend = async () => {
     if (newMessage.trim() === "") return;
-    const youser = getAuth().currentUser;
-    const db = getDatabase();
-    const messagesRef = ref(db, 'messages');
-    setUserId(youser);
-    const insertMessage = {
-      text: newMessage.trim(),
-      timestamp: new Date().toISOString()
-    }
 
-    push(messagesRef, insertMessage).then(() => {
+    const currentUser = getAuth().currentUser;
+    if (!currentUser) return;
+
+    try {
+      const db = getDatabase();
+      const messagesRef = ref(db, 'messages');
+      
+      const message = {
+        text: newMessage.trim(),
+        timestamp: new Date().toISOString()
+      };
+
+      await push(messagesRef, message);
       setNewMessage("");
-    }).catch(error => {
-      console.error("Error sending message:", error);
-    });
 
-    const contactRef = ref(db, `users/${youser.id}/contacts`);
-    let snapshot = await get(contactRef);
-    let user;
-    if(snapshot.exists()) {
-      snapshot.forEach((childSnapshot) => {
-        let cs = childSnapshot.val();
-        user = cs.id;
-        update(ref(db, 'users/' + youser.id + '/contacts/' + childSnapshot.key), {
-          lastMessage: insertMessage.text,
-          timestamp: insertMessage.timestamp
-        });
-      });
-    }
-    snapshot = await get(ref(db, `users/${user}/contacts`));
-    if(snapshot.exists()) {
-      snapshot.forEach((childSnapshot) => {
-        let cs = childSnapshot.val();
-        update(ref(db, 'users/' + user + '/contacts/' + childSnapshot.key), {
-          lastMessage: insertMessage.text,
-          timestamp: insertMessage.timestamp
-        });
-      });
-    }
-  };
-
-  const setUserId = async(youser) => {
-    const db = getDatabase();
-    const usersRef = ref(db, 'users');
-    const snapshot = await get(usersRef);
-    if (snapshot.exists()) {
+      const updateContacts = async (userId) => {
+        const contactRef = ref(db, `users/${userId}/contacts`);
+        const snapshot = await get(contactRef);
+        
         snapshot.forEach((childSnapshot) => {
-            childSnapshot.forEach((cs) => {
-                self = childSnapshot.val();
-                if (self.email.toLowerCase() === youser.email) {
-                    youser.id = childSnapshot.key;
-                }
-            });
+          const contactId = childSnapshot.key;
+          update(ref(db, `users/${userId}/contacts/${contactId}`), {
+            lastMessage: message.text,
+            timestamp: message.timestamp
+          });
         });
-    }   
+      };
+
+      await updateContacts(currentUser.uid);
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
 
   const handleDelete = (id) => {
     Alert.alert(
       'Delete Message',
-      'This action will delete the message only for you. The other user can still see it.',
+      'This action will delete the message.',
       [
         {
           text: 'Cancel',
@@ -107,61 +88,67 @@ const IndividualChat = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => navigation.navigate("Chat")}
-          style={({ pressed }) => [
-            {
-              marginTop: 20,
-              marginBottom: 20,
-              backgroundColor: '#F8FAFC',
-              paddingVertical: 10,
-              paddingHorizontal: 20,
-              borderRadius: 8,
-              opacity: pressed ? 0.8 : 1,
-            },
-          ]}
-        >
-          <Text style={{ textAlign: "center", color: '#010C80' }}>Back</Text>
-        </Pressable>
+    <GestureHandlerRootView>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Pressable
+            onPress={() => navigation.navigate("Chat")}
+            style={({ pressed }) => [
+              {
+                marginTop: 20,
+                marginBottom: 20,
+                backgroundColor: '#FFFFFF', 
+                paddingVertical: 10,
+                paddingHorizontal: 20,
+                borderRadius: 8,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            <Text style={{ color: '#25291C' }}>Back</Text>
+          </Pressable>
+        </View>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <FlatList
+            data={sentMessages}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <LongPressGestureHandler
+                onHandlerStateChange={({ nativeEvent }) => {
+                  if (nativeEvent.state === State.ACTIVE) {
+                    handleDelete(item.id); 
+                  }
+                }}
+              >
+                <View style={styles.messageContainer}>
+                  <Text style={styles.messageText}>{item.text}</Text>
+                </View>
+              </LongPressGestureHandler>
+            )}
+            inverted={true}
+          />
+        </ScrollView>
+        <KeyboardAvoidingView behavior="padding" style={styles.inputContainer}>
+          <TextInput
+            value={newMessage}
+            onChangeText={setNewMessage}
+            style={styles.input}
+            placeholder="Type a message..."
+            placeholderTextColor="#25291C"
+          />
+          <Pressable onPress={handleSend} style={styles.sendButton}>
+            <Text style={styles.sendButtonText}>Send</Text>
+          </Pressable>
+        </KeyboardAvoidingView>
       </View>
-      {/* <Container></Container> flagged errors*/}
-      <View>
-        <FlatList
-          data={sentMessages}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.messageContainer}>
-              <Text style={styles.messageText}>{item.text}</Text>
-              <Pressable onPress={() => handleDelete(item.id)} style={styles.deleteButton}>
-                <Text style={styles.deleteButtonText}>Delete</Text>
-              </Pressable>
-            </View>
-          )}
-          inverted={true}
-        />
-      </View>
-      <KeyboardAvoidingView behavior="padding" style={styles.inputContainer}>
-        <TextInput
-          value={newMessage}
-          onChangeText={setNewMessage}
-          style={styles.input}
-          placeholder="Type a message..."
-          placeholderTextColor="#010C80"
-        />
-        <Pressable onPress={handleSend} style={styles.sendButton}>
-          <Text style={styles.sendButtonText}>Send</Text>
-        </Pressable>
-      </KeyboardAvoidingView>
-    </View>
+    </GestureHandlerRootView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#010C80',
+    backgroundColor: '#E3E7D3',
     padding: 10,
   },
   header: {
@@ -171,7 +158,11 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#E3E7D3',
   },
   input: {
     flex: 1,
@@ -179,7 +170,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginRight: 10,
-    color: '#010C80',
+    color: '#25291C',
   },
   sendButton: {
     backgroundColor: '#F8FAFC',
@@ -188,7 +179,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   sendButtonText: {
-    color: '#010C80',
+    color: '#25291C',
     fontWeight: 'bold',
     fontSize: 16,
   },
@@ -197,24 +188,14 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     marginBottom: 10,
-    maxWidth: '80%',
+    maxWidth: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   messageText: {
-    color: '#010C80',
+    color: '#25291C',
     fontSize: 16,
     flex: 1,
-  },
-  deleteButton: {
-    backgroundColor: '#FF0000',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 5,
-  },
-  deleteButtonText: {
-    color: '#FFFFFF',
-    fontSize: 12,
   },
 });
 

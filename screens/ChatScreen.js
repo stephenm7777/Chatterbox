@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, Text, Pressable, Modal, TextInput, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { signOut, getDatabase, ref, get, push, remove } from '@firebase/database';
-import { Timestamp } from 'firebase/firestore';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getDatabase, ref, get, push, remove } from '@firebase/database';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+import { List } from 'react-native-paper';
 
 const ChatScreen = () => {
     const [conversations, setConversations] = useState([]);
@@ -15,17 +15,18 @@ const ChatScreen = () => {
     const [searchEmail, setSearchEmail] = useState('');
     const [searchResult, setSearchResult] = useState(null);
     const [foundUser, setFoundUser] = useState(null);
+    const [expanded, setExpanded] = useState(false);
 
     useEffect(() => {
         fetchConversations();
-    }, []);
+    }, [youser]);
+
 
     const auth = getAuth();
     onAuthStateChanged(auth, (user) => {
-        if(user) {
+        if (user) {
             fetchConversations();
-        }
-        else {
+        } else {
             console.log("N/A");
         }
     });
@@ -39,7 +40,7 @@ const ChatScreen = () => {
             if (snapshot.exists()) {
                 const fetchedConversations = [];
                 snapshot.forEach((childSnapshot) => {
-                    fetchedConversations.push({id: childSnapshot.key, ...childSnapshot.val()});
+                    fetchedConversations.push({ id: childSnapshot.key, ...childSnapshot.val() });
                 });
                 setConversations(fetchedConversations);
             }
@@ -48,11 +49,11 @@ const ChatScreen = () => {
         }
     };
 
-    const signOutUser = async () => {
+    const performSignOut = async () => {
         try {
-            const auth = getAuth();
-            await signOut(auth);
-            navigation.navigate('Login');
+            console.log("Signing out user...");
+            await signOut(getAuth());
+            navigation.navigate('Home');
         } catch (error) {
             console.error('Sign out error', error);
         }
@@ -119,7 +120,7 @@ const ChatScreen = () => {
         }
     };
 
-    const setUserId = async(youser) => {
+    const setUserId = async (youser) => {
         const db = getDatabase();
         const usersRef = ref(db, 'users');
         const snapshot = await get(usersRef);
@@ -133,28 +134,28 @@ const ChatScreen = () => {
                     }
                 });
             });
-        }        
+        }
     };
-    
+
     const sendMessage = async () => {
         if (foundUser) {
-            try{
+            try {
                 const db = getDatabase();
                 const usersRef = ref(db, 'users');
 
                 setUserId(youser);
-                const userRef = ref(db, 'users/'+foundUser.id+'/contacts');
+                const userRef = ref(db, 'users/' + foundUser.id + '/contacts');
                 const snapshot = await get(userRef);
-                if(snapshot.exists()) {
+                if (snapshot.exists()) {
                     snapshot.forEach((childSnapshot) => {
                         cs = childSnapshot.val();
-                        if(cs.id === youser.id) {
+                        if (cs.id === youser.id) {
                             alert("conversation with user already exists");
                             throw Error("conversation already exists");
                         }
                     });
                 }
-                const selfRef = ref(db, 'users/'+youser.id+'/contacts');
+                const selfRef = ref(db, 'users/' + youser.id + '/contacts');
                 const toReceiver = {
                     id: youser.id,
                     user: youser.email
@@ -167,7 +168,7 @@ const ChatScreen = () => {
                 push(selfRef, toSender);
                 navigation.navigate('IndivdualChat', { sender: 'You', receiver: foundUser.email });
             }
-            catch(error) {
+            catch (error) {
                 console.log("send message error, " + error);
             }
         } else {
@@ -178,7 +179,6 @@ const ChatScreen = () => {
     const deleteMessage = async (conversationId) => {
         try {
             const db = getDatabase();
-            // unsafe deletion
             const conversationRef = ref(db, `users/${youser.id}/contacts`);
             await remove(conversationRef);
             Alert.alert('Message deleted', 'The conversation has been deleted.');
@@ -190,15 +190,30 @@ const ChatScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Pressable onPress={toggleSearchModal} style={styles.dropDown}>
-                <Text style={styles.dropDownText}>Search Users</Text>
-            </Pressable>
-            <Pressable onPress={toggleSignOut} style={styles.signOutButton}>
-                <Text style={styles.signOutText}>Sign Out</Text>
-            </Pressable>
-            <Pressable onPress={navigateToProfile} style={styles.profileButton}>
-                <Text style={styles.profileButtonText}>Profile</Text>
-            </Pressable>
+            <List.Section style={styles.listSection}>
+                <List.Accordion
+                    title="Options"
+                    left={props => <List.Icon {...props} icon="equal" />}
+                    expanded={expanded}
+                    onPress={() => setExpanded(!expanded)}
+                >
+                    <List.Item
+                        title="Search Users"
+                        onPress={toggleSearchModal}
+                        left={props => <List.Icon {...props} icon="account-search" />}
+                    />
+                    <List.Item
+                        title="Sign Out"
+                        onPress={performSignOut}
+                        left={props => <List.Icon {...props} icon="logout" />}
+                    />
+                    <List.Item
+                        title="Profile"
+                        onPress={navigateToProfile}
+                        left={props => <List.Icon {...props} icon="account" />}
+                    />
+                </List.Accordion>
+            </List.Section>
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -240,7 +255,6 @@ const ChatScreen = () => {
                     <View style={styles.conversation}>
                         <Pressable onPress={() => navigateToChat(item)}>
                             <Text style={styles.user}>
-                                {/* Change this to usernames down the line*/}
                                 {item.user.toLowerCase() === youser.email ? item.user2 : item.user.toLowerCase()}
                             </Text>
                             <Text style={styles.lastMessage}>{item.lastMessage}</Text>
@@ -251,7 +265,6 @@ const ChatScreen = () => {
                     </View>
                 )}
             />
-            {/* <Text style={styles.previewMessage}>{messagePreview}</Text> */}
         </View>
     );
 };
@@ -259,11 +272,14 @@ const ChatScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#010C80',
+        backgroundColor: '#E3E7D3',
         padding: 10,
     },
+    listSection: {
+        marginTop: 20,
+    },
     conversation: {
-        backgroundColor: '#F8FAFC',
+        backgroundColor: '#E3E7D3',
         padding: 10,
         borderRadius: 8,
         marginBottom: 10,
@@ -290,42 +306,6 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 14,
     },
-    dropDown: {
-        backgroundColor: '#F8FAFC',
-        padding: 10,
-        borderRadius: 8,
-        marginBottom: 10,
-        alignItems: 'center',
-    },
-    dropDownText: {
-        color: '#010C80',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    signOutButton: {
-        backgroundColor: '#FF0000',
-        padding: 10,
-        borderRadius: 8,
-        marginBottom: 10,
-        alignItems: 'center',
-    },
-    signOutText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    profileButton: {
-        backgroundColor: '#010C80',
-        padding: 10,
-        borderRadius: 8,
-        marginBottom: 10,
-        alignItems: 'center',
-    },
-    profileButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
     modalView: {
         flex: 1,
         justifyContent: 'flex-end',
@@ -334,7 +314,7 @@ const styles = StyleSheet.create({
     },
     modalBackdrop: {
         flex: 1,
-        backgroundColor: 'transparent', 
+        backgroundColor: 'transparent',
         justifyContent: 'flex-end',
     },
     searchContainer: {
@@ -382,11 +362,6 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: 'bold',
-    },
-    previewMessage: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        marginTop: 10,
     },
 });
 

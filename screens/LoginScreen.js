@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, Image, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getAuth, signInWithEmailAndPassword } from '@firebase/auth';
 import { getDatabase, ref, push, get } from 'firebase/database';
 
@@ -9,6 +9,14 @@ const LoginScreen = () => {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false); // For showing loading indicator
     const navigation = useNavigation();
+
+    useFocusEffect(
+        useCallback(() => {
+            // Reset email and password when the screen is focused
+            setEmail("");
+            setPassword("");
+        }, [])
+    );
 
     const handleLogin = async () => {
         setLoading(true); // Show loading indicator
@@ -30,12 +38,12 @@ const LoginScreen = () => {
                         userExists = true;
                         return;
                     }
-                }))  
+                }));
             });
 
             if (!userExists) {
                 // If user does not exist, add them to the database
-                push(usersRef, {email});
+                push(usersRef, { email });
             } else {
                 console.log("User already exists in the database");
             }
@@ -45,12 +53,12 @@ const LoginScreen = () => {
             console.error(error);
             Alert.alert('Error', 'Invalid email or password.');
         } finally {
-            setLoading(false); 
+            setLoading(false);
         }
     }
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#010C80", padding: 10, alignItems: "center" }}>
+        <View style={{ flex: 1, backgroundColor: "#E3E7D3", padding: 10, alignItems: "center" }}>
             <ScrollView
                 contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
                 showsVerticalScrollIndicator={false}
@@ -62,45 +70,46 @@ const LoginScreen = () => {
                         style={{ width: 200, height: 200, resizeMode: "contain" }}
                     />
                     <View style={{ marginTop: 100, justifyContent: "center", alignItems: "center" }}>
-                        <Text style={{ color: "#F8FAFC", fontSize: 17, fontWeight: "600" }}>Sign in</Text>
-                        <Text style={{ color: "#F8FAFC", fontSize: 17, fontWeight: "600", marginTop: 15 }}>Sign In to Your Account</Text>
+                        <Text style={{ color: "#25291C", fontSize: 17, fontWeight: "600" }}>Sign in</Text>
                     </View>
 
                     <View style={{ marginTop: 50 }}>
                         <View>
-                            <Text style={{ color: "gray", fontSize: 18, fontWeight: "600" }}>Email</Text>
+                            <Text style={{ color: "#25291C", fontSize: 18, fontWeight: "600" }}>Email</Text>
                             <TextInput
                                 value={email}
                                 onChangeText={(text) => setEmail(text)}
                                 style={{
                                     fontSize: email ? 18 : 18,
-                                    color: "#FFFFFF",
-                                    borderBottomColor: "#F8FAFC", borderBottomWidth: 1, marginVertical: 10, width: 300
+                                    color: "#25291C",
+                                    borderBottomColor: "#25291C", borderBottomWidth: 1, marginVertical: 10, width: 300
                                 }}
-                                placeholderTextColor={"#F8FAFC"}
-                                placeholder='Enter email address ' />
+                                placeholderTextColor={"#25291C"}
+                                placeholder='Enter email address '
+                            />
                         </View>
                     </View>
 
                     <View style={{ marginTop: 10 }}>
                         <View>
-                            <Text style={{ color: "gray", fontSize: 18, fontWeight: "600" }}>Password</Text>
+                            <Text style={{ color: "#25291C", fontSize: 18, fontWeight: "600" }}>Password</Text>
                             <TextInput
                                 value={password}
                                 onChangeText={(text) => setPassword(text)}
                                 secureTextEntry={true}
                                 style={{
                                     fontSize: password ? 18 : 18,
-                                    color: "#FFFFFF",
-                                    borderBottomColor: "#F8FAFC", borderBottomWidth: 1, marginVertical: 10, width: 300
+                                    color: "#25291C",
+                                    borderBottomColor: "#25291C", borderBottomWidth: 1, marginVertical: 10, width: 300
                                 }}
-                                placeholderTextColor={"#F8FAFC"}
-                                placeholder='Enter password' />
+                                placeholderTextColor={"#25291C"}
+                                placeholder='Enter password'
+                            />
                         </View>
                     </View>
                     <Pressable onPress={handleLogin} style={{
                         width: 200,
-                        backgroundColor: "#F8FAFC",
+                        backgroundColor: "#25291C",
                         padding: 15,
                         marginTop: 50,
                         marginLeft: "auto",
@@ -108,22 +117,22 @@ const LoginScreen = () => {
                         borderRadius: 6
                     }}>
                         {loading ? (
-                            <ActivityIndicator size="small" color="#010C80" />
+                            <ActivityIndicator size="small" color="#E3E7D3" />
                         ) : (
-                            <Text style={{ fontSize: 16, fontWeight: "bold", textAlign: "center" }}>Login</Text>
+                            <Text style={{ fontSize: 16, fontWeight: "bold", textAlign: "center", color: "#E3E7D3" }}>Login</Text>
                         )}
                     </Pressable>
 
                     <Pressable onPress={() => navigation.navigate("Register")} style={{ marginTop: 15 }}>
-                        <Text style={{ textAlign: "center", color: '#F8FAFC' }}>Don't have an account? Sign Up</Text>
+                        <Text style={{ textAlign: "center", color: '#25291C' }}>Don't have an account? Sign Up</Text>
                     </Pressable>
                     <Pressable onPress={() => navigation.navigate("ForgotPassword")} style={{ marginTop: 15 }}>
-                        <Text style={{ textAlign: "center", color: '#F8FAFC' }}>Forgot Password?</Text>
+                        <Text style={{ textAlign: "center", color: '#25291C' }}>Forgot Password?</Text>
                     </Pressable>
                 </KeyboardAvoidingView>
             </ScrollView>
         </View>
-    )
+    );
 }
 
 export default LoginScreen;
