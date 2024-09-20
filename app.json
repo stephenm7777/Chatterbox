@@ -20,13 +20,24 @@
         "image": "./assets/splash.png",
         "resizeMode": "contain",
         "backgroundColor": "#010C80"
+      },
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "This app requires access to the photo library to upload profile pictures.",
+        "NSCameraUsageDescription": "This app requires access to the camera to take profile pictures.",
+        "NSAllowsArbitraryLoads": true
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#010C80"
-      }
+      },
+      "package": "com.anonymous.Chatterbox",
+      "permissions": [
+        "INTERNET",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
