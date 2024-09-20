@@ -1,27 +1,28 @@
 import React, { useState, useCallback } from 'react';
 import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, Image, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { getAuth, signInWithEmailAndPassword } from '@firebase/auth';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'; 
 import { getDatabase, ref, push, get } from 'firebase/database';
+import { auth } from '../firebase';
 
 const LoginScreen = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false); // For showing loading indicator
+    const [loading, setLoading] = useState(false); 
     const navigation = useNavigation();
 
     useFocusEffect(
         useCallback(() => {
-            // Reset email and password when the screen is focused
+        
             setEmail("");
             setPassword("");
         }, [])
     );
 
     const handleLogin = async () => {
-        setLoading(true); // Show loading indicator
+        setLoading(true); 
         try {
-            const auth = getAuth();
+            
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
             console.log("User logged in:", user);
@@ -29,20 +30,19 @@ const LoginScreen = () => {
             const db = getDatabase();
             const usersRef = ref(db, 'users');
 
-            // Check if the user already exists in the database
             const snapshot = await get(usersRef);
             let userExists = false;
             snapshot.forEach((childSnapshot) => {
-                childSnapshot.forEach((cs => {
+                childSnapshot.forEach((cs) => {
                     if (cs.val() === email) {
                         userExists = true;
                         return;
                     }
-                }));
+                });
             });
 
             if (!userExists) {
-                // If user does not exist, add them to the database
+               
                 push(usersRef, { email });
             } else {
                 console.log("User already exists in the database");
@@ -80,7 +80,7 @@ const LoginScreen = () => {
                                 value={email}
                                 onChangeText={(text) => setEmail(text)}
                                 style={{
-                                    fontSize: email ? 18 : 18,
+                                    fontSize: 18,
                                     color: "#25291C",
                                     borderBottomColor: "#25291C", borderBottomWidth: 1, marginVertical: 10, width: 300
                                 }}
@@ -98,7 +98,7 @@ const LoginScreen = () => {
                                 onChangeText={(text) => setPassword(text)}
                                 secureTextEntry={true}
                                 style={{
-                                    fontSize: password ? 18 : 18,
+                                    fontSize: 18,
                                     color: "#25291C",
                                     borderBottomColor: "#25291C", borderBottomWidth: 1, marginVertical: 10, width: 300
                                 }}

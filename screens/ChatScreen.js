@@ -40,14 +40,22 @@ const ChatScreen = () => {
             if (snapshot.exists()) {
                 const fetchedConversations = [];
                 snapshot.forEach((childSnapshot) => {
-                    fetchedConversations.push({ id: childSnapshot.key, ...childSnapshot.val() });
+                    const conversation = {
+                        id: childSnapshot.key,
+                        ...childSnapshot.val(),
+                    };
+                    // Ensure lastMessage and timestamp are included in the conversation object
+                    fetchedConversations.push(conversation);
                 });
+                // Sort by timestamp to show the latest conversations first
+                fetchedConversations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                 setConversations(fetchedConversations);
             }
         } catch (error) {
             console.error('Fetch conversations error', error);
         }
     };
+    
 
     const performSignOut = async () => {
         try {
@@ -141,34 +149,33 @@ const ChatScreen = () => {
         if (foundUser) {
             try {
                 const db = getDatabase();
-                const usersRef = ref(db, 'users');
-
-                setUserId(youser);
+                await setUserId(youser);
                 const userRef = ref(db, 'users/' + foundUser.id + '/contacts');
-                const snapshot = await get(userRef);
-                if (snapshot.exists()) {
-                    snapshot.forEach((childSnapshot) => {
-                        cs = childSnapshot.val();
-                        if (cs.id === youser.id) {
-                            alert("conversation with user already exists");
-                            throw Error("conversation already exists");
-                        }
-                    });
-                }
                 const selfRef = ref(db, 'users/' + youser.id + '/contacts');
-                const toReceiver = {
+    
+                const messageContent = 'Your actual message content here';
+                const message = {
                     id: youser.id,
-                    user: youser.email
+                    user: youser.email,
+                    lastMessage: messageContent,
+                    timestamp: new Date().toISOString(),
                 };
-                push(userRef, toReceiver);
-                const toSender = {
-                    id: foundUser.id,
-                    user: foundUser.email
-                }
-                push(selfRef, toSender);
+    
+                await push(userRef, message);
+                await push(selfRef, { ...message, user: foundUser.email });
+    
+                await update(ref(db, `users/${youser.id}/contacts/${foundUser.id}`), {
+                    lastMessage: messageContent,
+                    timestamp: message.timestamp
+                });
+                await update(ref(db, `users/${foundUser.id}/contacts/${youser.id}`), {
+                    lastMessage: messageContent,
+                    timestamp: message.timestamp
+                });
+    
                 navigation.navigate('IndivdualChat', { sender: 'You', receiver: foundUser.email });
-            }
-            catch (error) {
+                fetchConversations(); 
+            } catch (error) {
                 console.log("send message error, " + error);
             }
         } else {
