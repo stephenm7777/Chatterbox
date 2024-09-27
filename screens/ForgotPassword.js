@@ -26,7 +26,7 @@ const ForgotPassword = () => {
     }
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#010C80", padding: 10, alignItems: "center" }}>
+        <View style={{ flex: 1, backgroundColor: "#E3E7D3", padding: 10, alignItems: "center" }}>
             <ScrollView
                 contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
                 showsVerticalScrollIndicator={false}
@@ -38,29 +38,29 @@ const ForgotPassword = () => {
                         style={{ width: 200, height: 200, resizeMode: "contain" }}
                     />
                     <View style={{ marginTop: 100, justifyContent: "center", alignItems: "center" }}>
-                        <Text style={{ color: "#F8FAFC", fontSize: 17, fontWeight: "600" }}>Password</Text>
-                        <Text style={{ color: "#F8FAFC", fontSize: 17, fontWeight: "600", marginTop: 15 }}>Reset password to account</Text>
+                        <Text style={{ color: "#25291C", fontSize: 17, fontWeight: "600" }}>Password</Text>
+                        <Text style={{ color: "#25291C", fontSize: 17, fontWeight: "600", marginTop: 15 }}>Reset password to account</Text>
                     </View>
 
                     <View style={{ marginTop: 50 }}>
                         <View>
-                            <Text style={{ color: "gray", fontSize: 18, fontWeight: "600" }}>Email</Text>
+                            <Text style={{ color: "#25291C", fontSize: 18, fontWeight: "600" }}>Email</Text>
                             <TextInput
                                 value={email}
                                 onChangeText={(text) => setEmail(text)}
                                 style={{
                                     fontSize: email ? 18 : 18,
-                                    color: "#FFFFFF",
-                                    borderBottomColor: "#F8FAFC", borderBottomWidth: 1, marginVertical: 10, width: 300
+                                    color: "#25291C",
+                                    borderBottomColor: "#25291C", borderBottomWidth: 1, marginVertical: 10, width: 300
                                 }}
-                                placeholderTextColor={"#F8FAFC"}
+                                placeholderTextColor={"#25291C"}
                                 placeholder='Enter email address' />
                         </View>
                     </View>
 
                     <Pressable onPress={handleForgotPassword} style={{
                         width: 200,
-                        backgroundColor: "#F8FAFC",
+                        backgroundColor: "#25291C",
                         padding: 15,
                         marginTop: 50,
                         marginLeft: "auto",
@@ -70,11 +70,11 @@ const ForgotPassword = () => {
                         {loading ? (
                             <ActivityIndicator size="small" color="#010C80" />
                         ) : (
-                            <Text style={{ fontSize: 16, fontWeight: "bold", textAlign: "center" }}>Reset Password</Text>
+                            <Text style={{ fontSize: 16, fontWeight: "bold", textAlign: "center", color: "#E3E7D3" }}>Reset Password</Text>
                         )}
                     </Pressable>
                     <Pressable onPress={() => navigation.navigate("Home")} style={{ marginTop: 15 }}>
-                        <Text style={{ textAlign: "center", color: '#F8FAFC' }}>Return to Login Page</Text>
+                        <Text style={{ textAlign: "center", color: '#25291C' }}>Return to Login Page</Text>
                     </Pressable>
                 </KeyboardAvoidingView>
             </ScrollView>

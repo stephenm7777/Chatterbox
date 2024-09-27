@@ -40,7 +40,7 @@ const RegisterScreen = () => {
     }
 
     return (
-        <View style={{ flex: 1, backgroundColor: "#010C80", padding: 10, alignItems: "center" }}>
+        <View style={{ flex: 1, backgroundColor: "#E3E7D3", padding: 10, alignItems: "center" }}>
             <ScrollView
                 contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
                 showsVerticalScrollIndicator={false}
@@ -52,71 +52,71 @@ const RegisterScreen = () => {
                         style={{ width: 200, height: 200, resizeMode: "contain" }}
                     />
                     <View style={{ marginTop: 50, justifyContent: "center", alignItems: "center" }}>
-                        <Text style={{ color: "#F8FAFC", fontSize: 17, fontWeight: "600" }}>Register</Text>
+                        <Text style={{ color: "#25291C", fontSize: 17, fontWeight: "600" }}>Register</Text>
                     </View>
 
                     <View style={{ marginTop: 10 }}>
                         <View>
-                            <Text style={{ color: "gray", fontSize: 18, fontWeight: "600" }}>Email</Text>
+                            <Text style={{ color: "#25291C", fontSize: 18, fontWeight: "600" }}>Email</Text>
                             <TextInput
                                 value={email}
                                 onChangeText={(text) => setEmail(text)}
                                 style={{
                                     fontSize: email ? 18 : 18,
-                                    color: "#FFFFFF",
-                                    borderBottomColor: "#F8FAFC", borderBottomWidth: 1, marginVertical: 10, width: 300
+                                    color: "#25291C",
+                                    borderBottomColor: "#25291C", borderBottomWidth: 1, marginVertical: 10, width: 300
                                 }}
-                                placeholderTextColor={"#F8FAFC"}
+                                placeholderTextColor={"#25291C"}
                                 placeholder='Enter email address ' />
                         </View>
                     </View>
 
                     <View style={{ marginTop: 10 }}>
                         <View>
-                            <Text style={{ color: "gray", fontSize: 18, fontWeight: "600" }}>Password</Text>
+                            <Text style={{ color: "#25291C", fontSize: 18, fontWeight: "600" }}>Password</Text>
                             <TextInput
                                 value={password}
                                 onChangeText={(text) => setPassword(text)}
                                 secureTextEntry={true}
                                 style={{
                                     fontSize: password ? 18 : 18,
-                                    color: "#FFFFFF",
-                                    borderBottomColor: "#F8FAFC", borderBottomWidth: 1, marginVertical: 10, width: 300
+                                    color: "#25291C",
+                                    borderBottomColor: "#25291C", borderBottomWidth: 1, marginVertical: 10, width: 300
                                 }}
-                                placeholderTextColor={"#F8FAFC"}
+                                placeholderTextColor={"#25291C"}
                                 placeholder='Enter password' />
                         </View>
                     </View>
 
                     <View style={{ marginTop: 10 }}>
                         <View>
-                            <Text style={{ color: "gray", fontSize: 18, fontWeight: "600" }}>Confirm Password</Text>
+                            <Text style={{ color: "#25291C", fontSize: 18, fontWeight: "600" }}>Confirm Password</Text>
                             <TextInput
                                 value={confirmPassword}
                                 onChangeText={(text) => setConfirmPassword(text)}
                                 secureTextEntry={true}
                                 style={{
                                     fontSize: confirmPassword ? 18 : 18,
-                                    color: "#FFFFFF",
-                                    borderBottomColor: "#F8FAFC", borderBottomWidth: 1, marginVertical: 10, width: 300
+                                    color: "#25291C",
+                                    borderBottomColor: "#25291C", borderBottomWidth: 1, marginVertical: 10, width: 300
                                 }}
-                                placeholderTextColor={"#F8FAFC"}
+                                placeholderTextColor={"#25291C"}
                                 placeholder='Confirm password' />
                         </View>
                     </View>
 
                     <Pressable onPress={handleRegister} style={{
                         width: 200,
-                        backgroundColor: "#F8FAFC",
+                        backgroundColor: "#25291C",
                         padding: 15,
                         marginTop: 50,
                         borderRadius: 6
                     }}>
-                        <Text style={{ fontSize: 16, fontWeight: "bold", textAlign: "center" }}>Register</Text>
+                        <Text style={{ fontSize: 16, fontWeight: "bold", textAlign: "center", color: "#E3E7D3" }}>Register</Text>
                     </Pressable>
 
                     <Pressable onPress={() => navigation.navigate("Home")} style={{ marginTop: 15 }}>
-                        <Text style={{ textAlign: "center", color: '#F8FAFC' }}>Already have an account? Sign In</Text>
+                        <Text style={{ textAlign: "center", color: '#25291C' }}>Already have an account? Sign In</Text>
                     </Pressable>
                 </KeyboardAvoidingView>
             </ScrollView>
