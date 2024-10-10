@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TextInput, Button, Image, Alert } from 'react-native';
+import { View, StyleSheet, TextInput, Button, Image, Alert, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, updateProfile } from 'firebase/auth'; // Update import
@@ -19,9 +19,26 @@ const ProfileScreen = () => {
             if (status !== 'granted') {
                 Alert.alert('Sorry, we need camera roll permissions to make this work!');
             }
-        })();
-    }, []);
 
+            //fetch the current user's profile data from firebase
+            const db = getDatabase();
+            const userRef = ref(db, `users/${youser.uid}/profile`);
+            const snapshot = await get(userRef);
+
+            if(snapshot.exists())
+            {
+                const profileData = snapshot.val();
+                setName(profileData.name || '');
+                setBio(profileData.bio || '');
+
+                if(profileData.photoURL)
+                {
+                    setImage(profileData.imageURL); //set the image to the user's profile image
+                }
+            }
+        })();
+    }, [youser]);
+    // function to pick an image from the camera roll
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -43,27 +60,36 @@ const ProfileScreen = () => {
             const db = getDatabase();
 
             // Upload image
-            const storage = getStorage();
-            const storageRef = sRef(storage, "profileImages/" + youser.id + ".jpg");
-            await uploadBytes(storageRef, image);
-
-            // Get image URL
-            const imageUrl = await getDownloadURL(storageRef);
-            let uniqueUsername = true;
+            let imageUrl = ''; // Default image URL
+            if (image)
+            {
+                const storage = getStorage();
+                const storageRef = sRef(storage, "profileImages/" + youser.id + ".jpg");
+                const response = await fetch(image); // Fetch the image
+                const blob = await response.blob(); // Convert the image to a blob
+                await uploadBytes(storageRef, blob); // Upload the image to Firebase Storage
+    
+                imageUrl = await getDownloadURL(storageRef); // Get the image URL after uploading
+                // let uniqueUsername = true;
+            }
+           
 
             const userRef = ref(db, `users/${user.id}/profile/`); // Reference to the user's node
 
-            // Update profile
-            await updateProfile(user, {
-                displayName: name,
-                photoURL: imageUrl
-            });
-
-
+            // update and set Firebase profile data
             await set(userRef, {
                 name,
                 bio,
+                imageURL: imageUrl || null, // Set the image URL if it exists
             });
+
+
+            // Update Firebase Auth profile for displayName and photoURL
+            await updateProfile(user, {
+                displayName: name,
+                photoURL: imageUrl || user.photoURL,
+            });
+
             Alert.alert('Profile saved successfully!');
             navigation.navigate("Chat");
         } catch (error) {
@@ -74,13 +100,15 @@ const ProfileScreen = () => {
 
 
     return (
-        <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.container}>
+            {/* Display the image */}
             {image && (
                 <Image source={{ uri: image }} style={styles.previewImage} />
             )}
             <View style={styles.imageContainer}>
                 <Button title="Pick an image from camera roll" onPress={pickImage} color="#010C80" />
             </View>
+            {/* Input for editing name */}
             <TextInput
                 style={styles.input}
                 placeholder="Name"
@@ -88,6 +116,7 @@ const ProfileScreen = () => {
                 onChangeText={setName}
                 placeholderTextColor="#010C80"
             />
+            {/* Input for editing bio */}
             <TextInput
                 style={styles.input}
                 placeholder="Bio"
@@ -96,8 +125,9 @@ const ProfileScreen = () => {
                 onChangeText={setBio}
                 placeholderTextColor="#010C80"
             />
+            {/* Button to save profile */}
             <Button title="Save" onPress={saveProfile} color="#010C80" />
-        </View>
+        </ScrollView>
     );
 };
 
