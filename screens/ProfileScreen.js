@@ -100,7 +100,7 @@ const ProfileScreen = () => {
 
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
+        <View contentContainerStyle={styles.container}>
             {/* Display the image */}
             {image && (
                 <Image source={{ uri: image }} style={styles.previewImage} />
@@ -127,7 +127,7 @@ const ProfileScreen = () => {
             />
             {/* Button to save profile */}
             <Button title="Save" onPress={saveProfile} color="#010C80" />
-        </ScrollView>
+        </View>
     );
 };
 
