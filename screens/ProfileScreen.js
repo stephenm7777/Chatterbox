@@ -100,14 +100,11 @@ const ProfileScreen = () => {
 
 
     return (
-        <View contentContainerStyle={styles.container}>
+        <View style={styles.container}>
             {/* Display the image */}
             {image && (
                 <Image source={{ uri: image }} style={styles.previewImage} />
             )}
-            <View style={styles.imageContainer}>
-                <Button title="Pick an image from camera roll" onPress={pickImage} color="#010C80" />
-            </View>
             {/* Input for editing name */}
             <TextInput
                 style={styles.input}
@@ -125,8 +122,12 @@ const ProfileScreen = () => {
                 onChangeText={setBio}
                 placeholderTextColor="#010C80"
             />
+            {/* Button to pick an image from camera roll */}
+             <View style={styles.imageContainer}>
+                <Button title="Pick an image from camera roll" onPress={pickImage} color="#25291C" />
+            </View>
             {/* Button to save profile */}
-            <Button title="Save" onPress={saveProfile} color="#010C80" />
+            <Button title="Save" onPress={saveProfile} color="#25291C" />
         </View>
     );
 };
@@ -137,7 +138,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         padding: 20,
-        backgroundColor: '#010C80',
+        backgroundColor: '#E3E7D3',
     },
     imageContainer: {
         marginBottom: 20,
