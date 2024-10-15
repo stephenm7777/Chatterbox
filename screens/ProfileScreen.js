@@ -31,7 +31,7 @@ const ProfileScreen = () => {
                 setName(profileData.name || '');
                 setBio(profileData.bio || '');
 
-                if(profileData.imageURL)
+                if(profileData.photoURL)
                 {
                     setImage(profileData.imageURL); //set the image to the user's profile image
                 }
@@ -52,30 +52,29 @@ const ProfileScreen = () => {
         }
     };
 
-    // function to save the profile 
     const saveProfile = async () => {
         try {
+            const auth = getAuth();
+            const user = auth.currentUser;
+            // Update bio in database
             const db = getDatabase();
-            const user = youser;
+
             // Upload image
             let imageUrl = ''; // Default image URL
-            if (image && image.startsWith('file://'))
+            if (image)
             {
                 const storage = getStorage();
-                const storageRef = sRef(storage, `profileImages/${youser.uid}.jpg`);
+                const storageRef = sRef(storage, "profileImages/" + youser.id + ".jpg");
                 const response = await fetch(image); // Fetch the image
                 const blob = await response.blob(); // Convert the image to a blob
                 await uploadBytes(storageRef, blob); // Upload the image to Firebase Storage
     
                 imageUrl = await getDownloadURL(storageRef); // Get the image URL after uploading
-            }
-            else
-            {
-                imageUrl = image || ''; // use the existing image URL if no new image is selected
+                // let uniqueUsername = true;
             }
            
 
-            const userRef = ref(db, `users/${user.uid}/profile/`); // Reference to the user's node
+            const userRef = ref(db, `users/${user.id}/profile/`); // Reference to the user's node
 
             // update and set Firebase profile data
             await set(userRef, {
@@ -101,11 +100,14 @@ const ProfileScreen = () => {
 
 
     return (
-        <View style={styles.container}>
+        <View contentContainerStyle={styles.container}>
             {/* Display the image */}
             {image && (
                 <Image source={{ uri: image }} style={styles.previewImage} />
             )}
+            <View style={styles.imageContainer}>
+                <Button title="Pick an image from camera roll" onPress={pickImage} color="#010C80" />
+            </View>
             {/* Input for editing name */}
             <TextInput
                 style={styles.input}
@@ -123,10 +125,6 @@ const ProfileScreen = () => {
                 onChangeText={setBio}
                 placeholderTextColor="#010C80"
             />
-            {/* Button to pick an image */}
-            <View style={styles.imageContainer}>
-                <Button title="Pick an image from camera roll" onPress={pickImage} color="#010C80" />
-            </View>
             {/* Button to save profile */}
             <Button title="Save" onPress={saveProfile} color="#010C80" />
         </View>
