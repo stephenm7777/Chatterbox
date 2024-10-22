@@ -1,12 +1,23 @@
-import React from 'react';
+import { React, useState, useEffect } from 'react';
 import { View, Image, KeyboardAvoidingView, FlatList, StyleSheet, Text, Pressable, Modal, TextInput, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth } from 'firebase/auth';
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
+import { getDatabase, ref, onValue } from 'firebase/database';
 
 const UserProfile = () => {
     const navigation = useNavigation();
     const youser = getAuth().currentUser;
+    const [bio, setBio] = useState('');
+    const db = getDatabase();
+
+    useEffect(() => {
+      const bioRef = ref(db, `users/${youser.id}/profile/bio`);
+      onValue(bioRef, (snapshot) => {
+        const bio = snapshot.val();
+        setBio(bio);
+      });
+    }, []);
 
     return (
         <View style={styles.container} >
@@ -34,7 +45,7 @@ const UserProfile = () => {
             <Text style={styles.username}>{youser.displayName}</Text>
             <GestureHandlerRootView style={{height: '40%', paddingTop: '10%'}}>
                 <ScrollView style={{borderRadius: 8, borderWidth: 3}}>
-                    <Text style={styles.userbio}>**user bio here**</Text>
+                    <Text style={styles.userbio}>{bio}</Text>
                     {/* <Pressable onPress={() => null}>
                         <Icon></Icon>
                     </Pressable> */}

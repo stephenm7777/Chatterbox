@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, Ima
 import { useNavigation } from '@react-navigation/native';
 import { initializeApp } from '@firebase/app';
 import { getAuth, createUserWithEmailAndPassword } from '@firebase/auth';
+import { getDatabase, ref, push, get, set } from 'firebase/database';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDyiBg7M418a5F0VW7uHLzpTtO2fou7g6U",
@@ -21,6 +22,8 @@ const RegisterScreen = () => {
     const [confirmPassword, setConfirmPassword] = useState("");
     const navigation = useNavigation();
 
+    const db = getDatabase();
+
     const handleRegister = () => {
         if (password !== confirmPassword) {
             Alert.alert('Error', 'Passwords do not match.');
@@ -30,7 +33,8 @@ const RegisterScreen = () => {
         createUserWithEmailAndPassword(getAuth(), email, password)
             .then(userCredential => {
                 const user = userCredential.user;
-                console.log("User registered:", user);
+                const usersRef = ref(db, 'users');
+                push(usersRef, { email } );
                 navigation.navigate("Chat");
             })
             .catch(error => {

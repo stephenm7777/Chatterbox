@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TextInput, Button, Image, Alert, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
-import { getAuth, updateProfile } from 'firebase/auth'; // Update import
+import { getAuth, updateProfile, onAuthStateChanged } from 'firebase/auth'; // Update import
 import { getDatabase, ref, set, get, child } from 'firebase/database'; // Update import
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from 'firebase/storage'; // Update import
 
@@ -73,9 +73,24 @@ const ProfileScreen = () => {
                 // let uniqueUsername = true;
             }
            
-
+            const usernameRef = ref(db, 'users');
             const userRef = ref(db, `users/${user.id}/profile/`); // Reference to the user's node
-
+            const snapshot = await get(usernameRef);
+            let uniqueUser = true;
+            snapshot.forEach((childsnapshot) => {
+                childsnapshot.forEach((cs) => {
+                    cs.forEach((mcs) => {
+                        if(mcs.val() === name) {
+                            uniqueUser = false;
+                            return;
+                        }
+                    });
+                });
+            });
+            if(!uniqueUser) {
+                Alert.alert("Username already taken");
+                return;
+            }
             // update and set Firebase profile data
             await set(userRef, {
                 name,
