@@ -47,8 +47,11 @@ const ProfileScreen = () => {
             quality: 1,
         });
 
-        if (!result.cancelled) {
-            setImage(result.uri);
+        console.log("Image Picker Result:", result);
+
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+            console.log("Selected Image URI:", result.assets[0].uri);
+            setImage(result.assets[0].uri);
         }
     };
 
@@ -64,7 +67,7 @@ const ProfileScreen = () => {
             if (image)
             {
                 const storage = getStorage();
-                const storageRef = sRef(storage, "profileImages/" + youser.id + ".jpg");
+                const storageRef = sRef(storage, "profileImages/" + youser.uid + ".jpg");
                 const response = await fetch(image); // Fetch the image
                 const blob = await response.blob(); // Convert the image to a blob
                 await uploadBytes(storageRef, blob); // Upload the image to Firebase Storage

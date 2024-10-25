@@ -9,14 +9,23 @@ const UserProfile = () => {
     const navigation = useNavigation();
     const youser = getAuth().currentUser;
     const [bio, setBio] = useState('');
+    const [image, setImage] = useState(null);
     const db = getDatabase();
 
     useEffect(() => {
       const bioRef = ref(db, `users/${youser.id}/profile/bio`);
+      const imageRef = ref(db, `users/${youser.id}/profile/imageURL`);
+
       onValue(bioRef, (snapshot) => {
         const bio = snapshot.val();
         setBio(bio);
       });
+
+      onValue(imageRef, (snapshot) => {
+        const imageURL = snapshot.val();
+        setImage(imageURL);
+      });
+
     }, []);
 
     return (
@@ -40,7 +49,7 @@ const UserProfile = () => {
                 </Pressable>
             </View>
             <Pressable onPress={() => null}>
-                <Image source = {{uri: null}} style={styles.image}/>
+                <Image source = {{uri: image}} style={styles.image}/>
             </Pressable>
             <Text style={styles.username}>{youser.displayName}</Text>
             <GestureHandlerRootView style={{height: '40%', paddingTop: '10%'}}>
