@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, Text, Pressable, Modal, TextInput, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { getDatabase, ref, get, push, remove } from '@firebase/database';
+import { getDatabase, ref, get, push, remove, onValue } from '@firebase/database';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { List } from 'react-native-paper';
+import { Image } from 'expo-image';
 
 const ChatScreen = () => {
     const [conversations, setConversations] = useState([]);
@@ -17,6 +18,7 @@ const ChatScreen = () => {
     const [searchResult, setSearchResult] = useState(null);
     const [foundUser, setFoundUser] = useState(null);
     const [expanded, setExpanded] = useState(false);
+    const [photo, setPhoto] = useState(null);
 
     useEffect(() => {
         fetchConversations();
@@ -49,6 +51,16 @@ const ChatScreen = () => {
             console.error('Fetch conversations error', error);
         }
     };
+
+    const getUserPhoto = (item) => {
+        const db = getDatabase();
+        const photoRef = ref(db, `users/${item.id}/profile/imageURL`);
+        let photoURL;
+        onValue(photoRef, (sShot) => { 
+            photoURL = sShot.val();
+        });
+        return photoURL;
+    }
 
     const performSignOut = async () => {
         try {
@@ -268,11 +280,10 @@ const ChatScreen = () => {
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                     <View style={styles.conversation}>
-                        <Pressable onPress={() => navigateToChat(item)}>
-                            <Text style={styles.user}>
-                                {item.user.toLowerCase() === youser.email ? item.user2 : item.user.toLowerCase()}
-                            </Text>
-                            <Text style={styles.lastMessage}>{item.lastMessage}</Text>
+                        <Pressable onPress={() => navigateToChat(item)} style={styles.pressableConversation}>
+                            <Image source={getUserPhoto(item)} style={styles.previewImage} />
+                            <Text style={styles.user}>{item.user}</Text>
+                            {/* <Text style={styles.lastMessage}>{item.lastMessage}</Text> */}
                         </Pressable>
                         <Pressable onPress={() => deleteMessage(item.id)} style={styles.deleteButton}>
                             <Text style={styles.deleteButtonText}>Delete</Text>
@@ -293,14 +304,26 @@ const styles = StyleSheet.create({
     listSection: {
         marginTop: 20,
     },
+    previewImage: {
+        width: 50,
+        height: 50,
+        resizeMode: 'cover',
+        marginRight: 5,
+        borderRadius: 100,
+    },
     conversation: {
-        backgroundColor: '#E3E7D3',
+        backgroundColor: '#E3E7D3', //#E3E7D3
         padding: 10,
         borderRadius: 8,
         marginBottom: 10,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+    },
+    pressableConversation: {
+        flexDirection: 'row',
+        justifyContent: 'space-evenly',
+        alignItems: 'center'
     },
     user: {
         color: '#010C80',

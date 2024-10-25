@@ -1,9 +1,10 @@
 import { React, useState, useEffect } from 'react';
-import { View, Image, KeyboardAvoidingView, FlatList, StyleSheet, Text, Pressable, Modal, TextInput, Alert } from 'react-native';
+import { View, KeyboardAvoidingView, FlatList, StyleSheet, Text, Pressable, Modal, TextInput, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth } from 'firebase/auth';
 import { GestureHandlerRootView, ScrollView } from 'react-native-gesture-handler';
 import { getDatabase, ref, onValue } from 'firebase/database';
+import { Image } from 'expo-image';
 
 const UserProfile = () => {
     const navigation = useNavigation();
@@ -49,7 +50,7 @@ const UserProfile = () => {
                 </Pressable>
             </View>
             <Pressable onPress={() => null}>
-                <Image source = {{uri: image}} style={styles.image}/>
+                <Image source = {{uri: image}} style={styles.image} />
             </Pressable>
             <Text style={styles.username}>{youser.displayName}</Text>
             <GestureHandlerRootView style={{height: '40%', paddingTop: '10%'}}>
