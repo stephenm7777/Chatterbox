@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, Image, ScrollView, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { initializeApp } from '@firebase/app';
@@ -19,22 +19,47 @@ initializeApp(firebaseConfig);
 const RegisterScreen = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [username, setUsername] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const navigation = useNavigation();
 
     const db = getDatabase();
 
-    const handleRegister = () => {
+    const handleRegister = async () => {
         if (password !== confirmPassword) {
             Alert.alert('Error', 'Passwords do not match.');
             return;
         }
+        try {
+            let uniqueUser = true;
+            const usernameRef = ref(db, 'users');
+            const snapshot = await get(usernameRef);
+            snapshot.forEach((childsnapshot) => {
+                childsnapshot.forEach((cs) => {
+                    cs.forEach((mcs) => {
+                        if(mcs.val() === username) {
+                            uniqueUser = false;
+                            Alert.alert('Error', "Username taken");
+                            throw "Username Taken";
+                        }
+                    });
+                });
+            });
+        }
+        catch(error) {
+            console.error(error);
+            return;
+        }
 
         createUserWithEmailAndPassword(getAuth(), email, password)
-            .then(userCredential => {
+            .then(async (userCredential) => {
                 const user = userCredential.user;
                 const usersRef = ref(db, 'users');
-                push(usersRef, { email } );
+                push(usersRef, { email, profile: { 
+                    name: username, 
+                    bio: `Hello, my name is ${username}`,
+                    imageURL: "https://firebasestorage.googleapis.com/v0/b/chatterbox-e329c.appspot.com/o/profileImages%2FBlank%20Profile%20Picture.jpg?alt=media&token=99e96245-0414-40c9-9345-22c9dcac5348"
+                 }});
                 navigation.navigate("Chat");
             })
             .catch(error => {
@@ -72,6 +97,22 @@ const RegisterScreen = () => {
                                 }}
                                 placeholderTextColor={"#25291C"}
                                 placeholder='Enter email address ' />
+                        </View>
+                    </View>
+
+                    <View style={{ marginTop: 10 }}>
+                        <View>
+                            <Text style={{ color: "#25291C", fontSize: 18, fontWeight: "600" }}>Username</Text>
+                            <TextInput
+                                value={username}
+                                onChangeText={(text) => setUsername(text)}
+                                style={{
+                                    fontSize: username ? 18 : 18,
+                                    color: "#25291C",
+                                    borderBottomColor: "#25291C", borderBottomWidth: 1, marginVertical: 10, width: 300
+                                }}
+                                placeholderTextColor={"#25291C"}
+                                placeholder='Enter username ' />
                         </View>
                     </View>
 

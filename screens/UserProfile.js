@@ -11,11 +11,13 @@ const UserProfile = () => {
     const youser = getAuth().currentUser;
     const [bio, setBio] = useState('');
     const [image, setImage] = useState(null);
+    const [username, setUsername] = useState("");
     const db = getDatabase();
 
     useEffect(() => {
       const bioRef = ref(db, `users/${youser.id}/profile/bio`);
       const imageRef = ref(db, `users/${youser.id}/profile/imageURL`);
+      const usernameRef = ref(db, `users/${youser.id}/profile/name`);
 
       onValue(bioRef, (snapshot) => {
         const bio = snapshot.val();
@@ -25,6 +27,11 @@ const UserProfile = () => {
       onValue(imageRef, (snapshot) => {
         const imageURL = snapshot.val();
         setImage(imageURL);
+      });
+
+      onValue(usernameRef, (snapshot) => {
+        const usernameVal = snapshot.val();
+        setUsername(usernameVal);
       });
 
     }, []);
@@ -52,7 +59,7 @@ const UserProfile = () => {
             <Pressable onPress={() => null}>
                 <Image source = {{uri: image}} style={styles.image} />
             </Pressable>
-            <Text style={styles.username}>{youser.displayName}</Text>
+            <Text style={styles.username}>{username}</Text>
             <GestureHandlerRootView style={{height: '40%', paddingTop: '10%'}}>
                 <ScrollView style={{borderRadius: 8, borderWidth: 3}}>
                     <Text style={styles.userbio}>{bio}</Text>
