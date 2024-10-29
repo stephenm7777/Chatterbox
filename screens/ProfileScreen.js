@@ -3,7 +3,7 @@ import { View, StyleSheet, TextInput, Button, Image, Alert, ScrollView } from 'r
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth, updateProfile, onAuthStateChanged } from 'firebase/auth'; // Update import
-import { getDatabase, ref, set, get, child } from 'firebase/database'; // Update import
+import { getDatabase, ref, set, update, get, child } from 'firebase/database'; // Update import
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from 'firebase/storage'; // Update import
 
 const ProfileScreen = () => {
@@ -95,12 +95,30 @@ const ProfileScreen = () => {
                 return;
             }
             // update and set Firebase profile data
+            if(name === "") { 
+                throw "Username empty";
+            }
             await set(userRef, {
                 name,
                 bio,
-                imageURL: imageUrl || null, // Set the image URL if it exists
+                imageURL: imageUrl || "https://firebasestorage.googleapis.com/v0/b/chatterbox-e329c.appspot.com/o/profileImages%2FBlank%20Profile%20Picture.jpg?alt=media&token=99e96245-0414-40c9-9345-22c9dcac5348", // Set the image URL if it exists
             });
-
+            if(bio === "") {
+                await update(userRef, {
+                    bio: `Hello, my name is ${name}`
+                });
+            }
+            if(imageUrl === null) {
+                const storage = getStorage();
+                const storageRef = sRef(storage, "profileImages/hawk tuah.jpg");
+                // const response = await fetch(image); // Fetch the image
+                // const blob = await response.blob(); // Convert the image to a blob
+                // await uploadBytes(storageRef, blob); // Upload the image to Firebase Storage
+                imageUrl = await getDownloadURL(storageRef);
+                await update(userRef, {
+                   imageUrl: imageUrl
+                });
+            }
 
             // Update Firebase Auth profile for displayName and photoURL
             await updateProfile(user, {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, FlatList, StyleSheet, Text, Pressable, Modal, TextInput, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { getDatabase, ref, get, push, remove, onValue } from '@firebase/database';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { List } from 'react-native-paper';
@@ -60,6 +60,10 @@ const ChatScreen = () => {
             photoURL = sShot.val();
         });
         return photoURL;
+    }
+
+    const navigateToOtherProfile = (item) => {
+        navigation.navigate("OtherProfile", { user: item });
     }
 
     const performSignOut = async () => {
@@ -279,16 +283,18 @@ const ChatScreen = () => {
                 data={conversations}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <View style={styles.conversation}>
-                        <Pressable onPress={() => navigateToChat(item)} style={styles.pressableConversation}>
-                            <Image source={getUserPhoto(item)} style={styles.previewImage} />
+                    <Pressable style={styles.conversation} onPress={() => navigateToChat(item)}>
+                        <View style={styles.pressableConversation}>
+                            <Pressable onPress={() => navigateToOtherProfile(item)}>
+                                <Image source={getUserPhoto(item)} style={styles.previewImage} />
+                            </Pressable>
                             <Text style={styles.user}>{item.user}</Text>
                             {/* <Text style={styles.lastMessage}>{item.lastMessage}</Text> */}
-                        </Pressable>
+                        </View>
                         <Pressable onPress={() => deleteMessage(item.id)} style={styles.deleteButton}>
                             <Text style={styles.deleteButtonText}>Delete</Text>
                         </Pressable>
-                    </View>
+                    </Pressable>
                 )}
             />
         </View>
