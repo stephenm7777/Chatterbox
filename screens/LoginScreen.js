@@ -42,8 +42,7 @@ const LoginScreen = () => {
             });
 
             if (!userExists) {
-                // If user does not exist, add them to the database
-                push(usersRef, { email });
+                throw "Account doesn't exist";
             } else {
                 console.log("User already exists in the database");
             }

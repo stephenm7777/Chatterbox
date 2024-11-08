@@ -15,15 +15,11 @@ const IndividualChat = () => {
   const otherUserId = route.params?.receiver;
   const convoId = route.params?.conversationId;
 
-  // console.log("convoId:", convoId);
-  // console.log("otherUserID:", otherUserId);
-  // console.log("You", )
 
   useEffect(() => {
     const db = getDatabase();
     getUserCoversation();
     const messagesRef = ref(db, `messages/${convoId}`);
-    // console.log("id", conversationdId);
     const unsubscribe = onValue(messagesRef, (snapshot) => {
       const messages = [];
       snapshot.forEach((childSnapshot) => {
@@ -41,16 +37,11 @@ const IndividualChat = () => {
   const getUserCoversation = async() => {
     const db = getDatabase();
     const convoRef = ref(db, `users/${otherUserId}/contacts`);
-    // console.log(convoRef);
     const snapshot = await get(convoRef);
     snapshot.forEach((childSnapshot) => {
-      // console.log(childSnapshot.key);
       childSnapshot.forEach((cs) => {
-        // console.log("id bruder:", cs.val());
-        // console.log("convo id bruder:", convoId);
         if(cs.val() === convoId) {
           setOtherUserId(childSnapshot.key);
-          // console.log("Ja?", ouID);
           return;
         }
       });
@@ -77,8 +68,6 @@ const IndividualChat = () => {
       const updateContacts = async (userId) => {
         const contactRef = ref(db, `users/${userId}/contacts`);
         const snapshot = await get(contactRef);
-        // console.log("user convo:", ouID);
-        // const convoRef = ref(db, `users/${item.id}/contacts/${contactId}/${item.conversationId}/id`);
         snapshot.forEach((childSnapshot) => {
           const contactId = childSnapshot.key;
           childSnapshot.forEach((cs) => {
