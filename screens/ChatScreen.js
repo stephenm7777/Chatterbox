@@ -62,6 +62,16 @@ const ChatScreen = () => {
         return photoURL;
     }
 
+    const getUsername = (item) => {
+        const db = getDatabase();
+        const usernameRef = ref(db, `users/${item.id}/profile/name`);
+        let name;
+        onValue(usernameRef, (sShot) => { 
+            name = sShot.val();
+        });
+        return name;
+    };
+
     const navigateToOtherProfile = (item) => {
         navigation.navigate("OtherProfile", { user: item });
     }
@@ -86,7 +96,8 @@ const ChatScreen = () => {
 
     const navigateToChat = (conversation) => {
         setMessagePreview(conversation.lastMessage);
-        navigation.navigate("IndivdualChat");
+        console.log("Data", conversation);
+        navigation.navigate("IndivdualChat", {conversationId: conversation.conversationId, receiver: conversation.id});
     };
 
     const navigateToProfile = async () => {
@@ -160,7 +171,7 @@ const ChatScreen = () => {
             snapshot.forEach((childSnapshot) => {
                 childSnapshot.forEach((cs) => {
                     self = childSnapshot.val();
-                    if (self.email.toLowerCase() === youser.email) {
+                    if (self.email && self.email.toLowerCase() === youser.email) {
                         youser.id = childSnapshot.key;
                     }
                 });
@@ -186,18 +197,22 @@ const ChatScreen = () => {
                         }
                     });
                 }
+                const messagesRef = ref(db, 'messages/');
+                const contactId = await push(messagesRef, {});
                 const selfRef = ref(db, 'users/' + youser.id + '/contacts');
                 const toReceiver = {
                     id: youser.id,
-                    user: youser.email
+                    user: youser.email,
+                    conversationId: contactId.key
                 };
                 push(userRef, toReceiver);
                 const toSender = {
                     id: foundUser.id,
-                    user: foundUser.email
+                    user: foundUser.email,
+                    conversationId: contactId.key
                 }
                 push(selfRef, toSender);
-                navigation.navigate('IndivdualChat', { sender: 'You', receiver: foundUser.email });
+                navigation.navigate('IndivdualChat', { sender: 'You', receiver: foundUser.id, conversationId: contactId.key });
             }
             catch (error) {
                 console.log("send message error, " + error);
@@ -288,8 +303,10 @@ const ChatScreen = () => {
                             <Pressable onPress={() => navigateToOtherProfile(item)}>
                                 <Image source={getUserPhoto(item)} style={styles.previewImage} />
                             </Pressable>
-                            <Text style={styles.user}>{item.user}</Text>
-                            {/* <Text style={styles.lastMessage}>{item.lastMessage}</Text> */}
+                            <View style={{flexDirection: 'column'}}>
+                                <Text style={styles.user}>{getUsername(item)}</Text>
+                                <Text style={styles.lastMessage}>{item.lastMessage}</Text>
+                            </View>
                         </View>
                         <Pressable onPress={() => deleteMessage(item.id)} style={styles.deleteButton}>
                             <Text style={styles.deleteButtonText}>Delete</Text>

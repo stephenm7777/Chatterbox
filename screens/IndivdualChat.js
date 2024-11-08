@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, View, FlatList, Alert, ScrollView } from 'react-native';
-import { useNavigation} from '@react-navigation/native'; // Import GestureHandlerRootView
-import { getDatabase, ref, get, push, remove, onValue, update } from '@firebase/database';
+import { useNavigation, useRoute } from '@react-navigation/native'; // Import GestureHandlerRootView
+import { getDatabase, ref, get, push, remove, onValue, update, child } from '@firebase/database';
 import { getAuth } from 'firebase/auth';
 import { LongPressGestureHandler, State, GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -9,12 +9,21 @@ const IndividualChat = () => {
   const [sentMessages, setSentMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [deleteVisible, setDeleteVisible] = useState(false);
+  const [ouID, setOtherUserId] = useState("");
   const navigation = useNavigation();
+  const route = useRoute();
+  const otherUserId = route.params?.receiver;
+  const convoId = route.params?.conversationId;
+
+  // console.log("convoId:", convoId);
+  // console.log("otherUserID:", otherUserId);
+  // console.log("You", )
 
   useEffect(() => {
     const db = getDatabase();
-    const messagesRef = ref(db, 'messages');
-    
+    getUserCoversation();
+    const messagesRef = ref(db, `messages/${convoId}`);
+    // console.log("id", conversationdId);
     const unsubscribe = onValue(messagesRef, (snapshot) => {
       const messages = [];
       snapshot.forEach((childSnapshot) => {
@@ -29,6 +38,25 @@ const IndividualChat = () => {
     return () => unsubscribe();
   }, []);
 
+  const getUserCoversation = async() => {
+    const db = getDatabase();
+    const convoRef = ref(db, `users/${otherUserId}/contacts`);
+    // console.log(convoRef);
+    const snapshot = await get(convoRef);
+    snapshot.forEach((childSnapshot) => {
+      // console.log(childSnapshot.key);
+      childSnapshot.forEach((cs) => {
+        // console.log("id bruder:", cs.val());
+        // console.log("convo id bruder:", convoId);
+        if(cs.val() === convoId) {
+          setOtherUserId(childSnapshot.key);
+          // console.log("Ja?", ouID);
+          return;
+        }
+      });
+    });
+  };
+
   const handleSend = async () => {
     if (newMessage.trim() === "") return;
 
@@ -37,8 +65,7 @@ const IndividualChat = () => {
 
     try {
       const db = getDatabase();
-      const messagesRef = ref(db, 'messages');
-      
+      const messagesRef = ref(db, `messages/${convoId}`);
       const message = {
         text: newMessage.trim(),
         timestamp: new Date().toISOString()
@@ -50,17 +77,25 @@ const IndividualChat = () => {
       const updateContacts = async (userId) => {
         const contactRef = ref(db, `users/${userId}/contacts`);
         const snapshot = await get(contactRef);
-        
+        // console.log("user convo:", ouID);
+        // const convoRef = ref(db, `users/${item.id}/contacts/${contactId}/${item.conversationId}/id`);
         snapshot.forEach((childSnapshot) => {
           const contactId = childSnapshot.key;
-          update(ref(db, `users/${userId}/contacts/${contactId}`), {
-            lastMessage: message.text,
-            timestamp: message.timestamp
+          childSnapshot.forEach((cs) => {
+            if(cs.val() === convoId) {
+              update(ref(db, `users/${userId}/contacts/${contactId}`), {
+                lastMessage: message.text,
+                timestamp: message.timestamp
+              });
+              update(ref(db, `users/${otherUserId}/contacts/${ouID}`), {
+                lastMessage: message.text,
+                timestamp: message.timestamp
+              });
+            }
           });
         });
       };
-
-      await updateContacts(currentUser.uid);
+      await updateContacts(currentUser.id);
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -79,7 +114,7 @@ const IndividualChat = () => {
           text: 'Delete',
           onPress: () => {
             const db = getDatabase();
-            const messageRef = ref(db, `messages/${id}`);
+            const messageRef = ref(db, `messages/${conversationId}/${id}`);
             remove(messageRef);
           }
         }
@@ -111,6 +146,7 @@ const IndividualChat = () => {
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <FlatList
             data={sentMessages}
+            scrollEnabled={false}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <LongPressGestureHandler
