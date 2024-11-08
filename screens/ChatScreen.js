@@ -21,14 +21,17 @@ const ChatScreen = () => {
     const [photo, setPhoto] = useState(null);
 
     useEffect(() => {
-        fetchConversations();
+        const usersRef = ref(getDatabase(), 'users');
+        onValue(usersRef, (snapshot) => {
+            fetchConversations();
+        });
     }, [youser]);
 
 
     const auth = getAuth();
     onAuthStateChanged(auth, (user) => {
         if (youser) {
-            fetchConversations();
+            // fetchConversations();
         } else {
             console.log("N/A");
         }
@@ -96,7 +99,6 @@ const ChatScreen = () => {
 
     const navigateToChat = (conversation) => {
         setMessagePreview(conversation.lastMessage);
-        console.log("Data", conversation);
         navigation.navigate("IndivdualChat", {conversationId: conversation.conversationId, receiver: conversation.id});
     };
 
@@ -330,7 +332,7 @@ const styles = StyleSheet.create({
     previewImage: {
         width: 50,
         height: 50,
-        resizeMode: 'cover',
+        contentFit: 'cover',
         marginRight: 5,
         borderRadius: 100,
     },
