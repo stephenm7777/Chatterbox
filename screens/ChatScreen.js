@@ -8,17 +8,14 @@ import { Image } from 'expo-image';
 
 const ChatScreen = () => {
     const [conversations, setConversations] = useState([]);
-    const [messagePreview, setMessagePreview] = useState('');
     const navigation = useNavigation();
     const youser = getAuth().currentUser;
     const [showSignOut, setShowSignOut] = useState(false);
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [searchEmail, setSearchEmail] = useState('');
-    const [searchUsername, setUsername] = useState('');
     const [searchResult, setSearchResult] = useState(null);
     const [foundUser, setFoundUser] = useState(null);
     const [expanded, setExpanded] = useState(false);
-    const [photo, setPhoto] = useState(null);
 
     useEffect(() => {
         const usersRef = ref(getDatabase(), 'users');
@@ -49,6 +46,9 @@ const ChatScreen = () => {
                     fetchedConversations.push({ id: childSnapshot.key, ...childSnapshot.val() });
                 });
                 setConversations(fetchedConversations);
+            }
+            else {
+                setConversations([]);
             }
         } catch (error) {
             console.error('Fetch conversations error', error);
@@ -224,13 +224,36 @@ const ChatScreen = () => {
         }
     };
 
-    const deleteMessage = async (conversationId) => {
+    const deleteMessage = async (item) => {
         try {
             const db = getDatabase();
+            let convoKey;
+            const messageRef = ref(db, `messages/${item.conversationId}`);
             const conversationRef = ref(db, `users/${youser.id}/contacts`);
-            await remove(conversationRef);
-            Alert.alert('Message deleted', 'The conversation has been deleted.');
+            const receiverRef = ref(db, `users/${item.id}/contacts`);
+            let snapshot = await get(conversationRef);
+            snapshot.forEach((childSnapshot) => {
+                childSnapshot.forEach((cs) => {
+                    if(cs.val() === item.conversationId) {
+                        convoKey = childSnapshot.key;
+                    }
+                });
+            });
+            const youserConvoRef = ref(db, `users/${youser.id}/contacts/${convoKey}`);
+            snapshot = await get(receiverRef);
+            snapshot.forEach((childSnapshot) => {
+                childSnapshot.forEach((cs) => {
+                    if(cs.val() === item.conversationId) {
+                        convoKey = childSnapshot.key;
+                    }
+                });
+            });
+            const userConvoRef = ref(db, `users/${item.id}/contacts/${convoKey}`);
+            await remove(youserConvoRef);
+            await remove(userConvoRef);
+            await remove(messageRef);
             fetchConversations(); // Fetch updated conversations
+            Alert.alert('Message deleted', 'The conversation has been deleted.');
         } catch (error) {
             console.error('Delete message error', error);
         }
@@ -310,7 +333,7 @@ const ChatScreen = () => {
                                 <Text style={styles.lastMessage}>{item.lastMessage}</Text>
                             </View>
                         </View>
-                        <Pressable onPress={() => deleteMessage(item.id)} style={styles.deleteButton}>
+                        <Pressable onPress={() => deleteMessage(item)} style={styles.deleteButton}>
                             <Text style={styles.deleteButtonText}>Delete</Text>
                         </Pressable>
                     </Pressable>
