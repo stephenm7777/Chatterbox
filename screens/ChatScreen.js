@@ -140,6 +140,9 @@ const ChatScreen = () => {
                 snapshot.forEach((childSnapshot) => {
                     childSnapshot.forEach((cs) => {
                         if (cs.val() === searchEmail) {
+                            if(cs.val().toLowerCase() == youser.email) {
+                                return;
+                            }
                             userExists = true;
                             setFoundUser({ id: childSnapshot.key, email: searchEmail }); // Store found user
                             return;
@@ -153,7 +156,12 @@ const ChatScreen = () => {
                 } else {
                     setSearchResult(false);
                     setFoundUser(null); // Clear found user
-                    Alert.alert('User not found', `User with email ${searchEmail} does not exist.`);
+                    if(searchEmail.toLowerCase() === youser.email) {
+                        Alert.alert("You can't message yourself");
+                    }
+                    else {
+                        Alert.alert('User not found', `User with email ${searchEmail} does not exist.`);
+                    }
                 }
             } else {
                 setSearchResult(false);
