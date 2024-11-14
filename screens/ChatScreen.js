@@ -9,6 +9,7 @@ import { Image } from 'expo-image';
 const ChatScreen = () => {
     const [conversations, setConversations] = useState([]);
     const navigation = useNavigation();
+    const [messagePreview, setMessagePreview] = useState('');
     const youser = getAuth().currentUser;
     const [showSignOut, setShowSignOut] = useState(false);
     const [showSearchModal, setShowSearchModal] = useState(false);
