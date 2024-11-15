@@ -100,7 +100,7 @@ const ChatScreen = () => {
 
     const navigateToChat = (conversation) => {
         setMessagePreview(conversation.lastMessage);
-        navigation.navigate("IndivdualChat", {conversationId: conversation.conversationId, receiver: conversation.id});
+        navigation.navigate("IndivdualChat", {conversationId: conversation.conversationId, receiver: conversation.id, receiverName: getUsername(conversation)});
     };
 
     const navigateToProfile = async () => {
@@ -223,7 +223,7 @@ const ChatScreen = () => {
                     conversationId: contactId.key
                 }
                 push(selfRef, toSender);
-                navigation.navigate('IndivdualChat', { sender: 'You', receiver: foundUser.id, conversationId: contactId.key });
+                navigation.navigate('IndivdualChat', { sender: 'You', receiver: foundUser.id, conversationId: contactId.key, receiverName: getUsername(foundUser) });
             }
             catch (error) {
                 console.log("send message error, " + error);
@@ -339,7 +339,7 @@ const ChatScreen = () => {
                             </Pressable>
                             <View style={{flexDirection: 'column'}}>
                                 <Text style={styles.user}>{getUsername(item)}</Text>
-                                <Text style={styles.lastMessage}>{item.lastMessage}</Text>
+                                <Text numberOfLines={1} style={styles.lastMessage}>{item.lastMessage}</Text>
                             </View>
                         </View>
                         <Pressable onPress={() => deleteMessage(item)} style={styles.deleteButton}>
@@ -390,7 +390,9 @@ const styles = StyleSheet.create({
     },
     lastMessage: {
         color: '#010C80',
-        fontSize: 16,
+        fontSize: 15,
+        minWidth: 'auto',
+        maxWidth: 250
     },
     deleteButton: {
         backgroundColor: '#FF0000',

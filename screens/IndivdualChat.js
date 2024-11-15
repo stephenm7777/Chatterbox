@@ -8,12 +8,13 @@ import { LongPressGestureHandler, State, GestureHandlerRootView } from 'react-na
 const IndividualChat = () => {
   const [sentMessages, setSentMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [deleteVisible, setDeleteVisible] = useState(false);
   const [ouID, setOtherUserId] = useState("");
   const navigation = useNavigation();
+  const youser = getAuth().currentUser;
   const route = useRoute();
   const otherUserId = route.params?.receiver;
   const convoId = route.params?.conversationId;
+  const receiverName = route.params?.receiverName;
 
 
   useEffect(() => {
@@ -59,12 +60,12 @@ const IndividualChat = () => {
       const messagesRef = ref(db, `messages/${convoId}`);
       const message = {
         text: newMessage.trim(),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        senderId: youser.id
       };
 
       await push(messagesRef, message);
       setNewMessage("");
-
       const updateContacts = async (userId) => {
         const contactRef = ref(db, `users/${userId}/contacts`);
         const snapshot = await get(contactRef);
@@ -84,7 +85,8 @@ const IndividualChat = () => {
           });
         });
       };
-      await updateContacts(currentUser.id);
+      getUserCoversation();
+      updateContacts(youser.id);
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -101,10 +103,43 @@ const IndividualChat = () => {
         },
         {
           text: 'Delete',
-          onPress: () => {
+          onPress: async() => {
             const db = getDatabase();
-            const messageRef = ref(db, `messages/${conversationId}/${id}`);
-            remove(messageRef);
+            const messageRef = ref(db, `messages/${convoId}/${id}`);
+            await remove(messageRef);
+
+            const updateContacts = async (userId) => {
+              const contactRef = ref(db, `users/${userId}/contacts`);
+              const snapshot = await get(contactRef);
+              snapshot.forEach((childSnapshot) => {
+                const contactId = childSnapshot.key;
+                childSnapshot.forEach((cs) => {
+                  if(cs.val() === convoId) {
+                    if(sentMessages.length === 1) {
+                      update(ref(db, `users/${userId}/contacts/${contactId}`), {
+                        lastMessage: '',
+                        timestamp: null
+                      });
+                      update(ref(db, `users/${otherUserId}/contacts/${ouID}`), {
+                        lastMessage: '',
+                        timestamp: null
+                      });
+                    }
+                    else if(sentMessages[0].id === id){
+                      update(ref(db, `users/${userId}/contacts/${contactId}`), {
+                        lastMessage: sentMessages[1].text,
+                        timestamp: sentMessages[1].timestamp
+                      });
+                      update(ref(db, `users/${otherUserId}/contacts/${ouID}`), {
+                        lastMessage: sentMessages[1].text,
+                        timestamp: sentMessages[1].timestamp
+                      });
+                    }
+                  }
+                });
+              });
+            };
+            updateContacts(youser.id);
           }
         }
       ]
@@ -131,6 +166,16 @@ const IndividualChat = () => {
           >
             <Text style={{ color: '#25291C' }}>Back</Text>
           </Pressable>
+          <Text style={{
+            position: 'absolute', 
+            textAlign: 'center', 
+            width: '50%', 
+            marginLeft: '25%',
+            fontSize: 20,
+            fontWeight: '700'
+            }}>
+            {receiverName}
+          </Text>
         </View>
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <FlatList
@@ -145,7 +190,7 @@ const IndividualChat = () => {
                   }
                 }}
               >
-                <View style={styles.messageContainer}>
+                <View style={item.senderId === youser.id ? styles.messageContainer : styles.messageContainerReceiver}>
                   <Text style={styles.messageText}>{item.text}</Text>
                 </View>
               </LongPressGestureHandler>
@@ -209,7 +254,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   messageContainer: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F8FAFC', //sender color 
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+    maxWidth: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  messageContainerReceiver: {
+    backgroundColor: '#c1eCf0', //receiver color
     padding: 10,
     borderRadius: 8,
     marginBottom: 10,
