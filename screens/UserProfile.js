@@ -93,6 +93,8 @@ const UserProfile = () => {
       <Text style={styles.username}>{username}</Text>
 
       {isEditing ? (
+        <View style={styles.editBioContainerContainer}>
+          <Text style={styles.bioLabel}>Update your new bio:</Text>
         <TextInput
           style={styles.bioInput}
           placeholder="Enter your bio here"
@@ -100,6 +102,7 @@ const UserProfile = () => {
           onChangeText={setBio}
           multiline
         />
+      </View>
       ) : (
         <GestureHandlerRootView style={{ height: '40%', paddingTop: '10%' }}>
           <ScrollView style={{ borderRadius: 8, borderWidth: 3 }}>
@@ -144,6 +147,12 @@ const styles = StyleSheet.create({
     editButtonText: {
       color: '#FFFFFF',
     },
+    editBioContainer: {
+      width: '100%',
+      alignSelf: 'center',
+      alignItems: 'center',
+      marginBottom: 20,
+    },
     image: {
         width: 200,
         height: 200,
@@ -159,13 +168,22 @@ const styles = StyleSheet.create({
         fontSize: 28,
         fontWeight: '800'
     },
+    bioLabel: {
+      fontSize: 18,
+      fontWeight: 600,
+      color: '#25291C',
+      marginBottom: 10,
+      textAlign: 'center',
+    },
     bioInput: {
-      width: '80%',
+      width: '100%',
       padding: 10,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#F8FAFC',
       borderRadius: 8,
       textAlign: 'center',
       color: '#25291C',
+      borderWidth: 1,
+      borderColor: '#E3E7D3',
       marginBottom: 20,
     },
     userbio: {
