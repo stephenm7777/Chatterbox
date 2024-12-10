@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   messageContainerReceiver: {
-    backgroundColor: '#c1eCf0', //receiver color
+    backgroundColor: '#88ee88', //receiver color
     padding: 10,
     borderRadius: 8,
     marginBottom: 10,
